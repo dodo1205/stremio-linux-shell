@@ -1,5 +1,6 @@
 [package]
 name = "stremio-linux-shell"
+authors = ["Stremio"]
 version = "0.1.0"
 description = "Freedom to Stream"
 edition = "2024"
