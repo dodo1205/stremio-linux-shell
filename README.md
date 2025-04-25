@@ -3,7 +3,7 @@
 ## Development
 
 ```bash
-git clone https://github.com/Stremio/stremio-linux
+git clone https://github.com/Stremio/stremio-linux-shell
 ```
 
 This Project is using [`winit`](https://github.com/rust-windowing/winit) + [`glutin`](https://github.com/rust-windowing/glutin) with [`libmpv`](https://github.com/mpv-player/mpv/blob/master/DOCS/man/libmpv.rst) and [`CEF`](https://github.com/chromiumembedded/cef)
@@ -29,7 +29,7 @@ cargo install cargo-generate-rpm
 
 #### Ubuntu
 ```bash
-apt install libmpv-dev
+apt install build-essential libssl-dev libnss3 libmpv-dev
 cargo install cargo-deb
 ```
 
