@@ -1,0 +1,307 @@
+mod constants;
+
+use std::{
+    ffi::CString,
+    os::raw::c_void,
+    rc::Rc,
+    sync::mpsc::{Receiver, Sender, channel},
+};
+
+use constants::{BOOL_PROPERTIES, FLOAT_PROPERTIES, INT_PROPERTIES, STRING_PROPERTIES};
+use glutin::{display::Display, prelude::GlDisplay};
+use itertools::Itertools;
+use libmpv2::{
+    Format, Mpv,
+    events::{Event, EventContext, PropertyData},
+    render::{OpenGLInitParams, RenderContext, RenderParam, RenderParamApiType},
+};
+use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
+use serde_json::{Number, Value};
+
+pub type GLContext = Rc<Display>;
+
+#[derive(Debug)]
+pub enum MpvPropertyValue {
+    Bool(bool),
+    String(String),
+    Float(f64),
+    Int(i64),
+}
+
+impl Serialize for MpvPropertyValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            MpvPropertyValue::Bool(value) => serializer.serialize_bool(*value),
+            MpvPropertyValue::String(value) => serializer.serialize_str(value),
+            MpvPropertyValue::Float(value) => serializer.serialize_f64(*value),
+            MpvPropertyValue::Int(value) => serializer.serialize_i64(*value),
+        }
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MpvProperty(pub String, pub Option<Value>);
+
+impl MpvProperty {
+    pub fn name(&self) -> &str {
+        self.0.as_ref()
+    }
+
+    pub fn value(&self) -> Result<MpvPropertyValue, &'static str> {
+        if let Some(value) = self.1.clone() {
+            if BOOL_PROPERTIES.contains(&self.name()) {
+                return serde_json::from_value::<bool>(value)
+                    .map(MpvPropertyValue::Bool)
+                    .map_err(|_| "Failed to get bool from Value");
+            }
+
+            if STRING_PROPERTIES.contains(&self.name()) {
+                return serde_json::from_value::<String>(value)
+                    .map(MpvPropertyValue::String)
+                    .map_err(|_| "Failed to get String from Value");
+            }
+
+            if FLOAT_PROPERTIES.contains(&self.name()) {
+                return serde_json::from_value::<f64>(value)
+                    .map(MpvPropertyValue::Float)
+                    .map_err(|_| "Failed to get f64 from Value");
+            }
+
+            if INT_PROPERTIES.contains(&self.name()) {
+                return serde_json::from_value::<i64>(value)
+                    .map(MpvPropertyValue::Int)
+                    .map_err(|_| "Failed to get i64 from Value");
+            }
+        }
+
+        Err("Failed to get value of MpvProperty")
+    }
+}
+
+impl Serialize for MpvProperty {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("MpvProperty", 2)?;
+        state.serialize_field("name", self.name())?;
+
+        if let Ok(value) = self.value() {
+            state.serialize_field("data", &value)?;
+        }
+
+        state.end()
+    }
+}
+
+#[derive(Debug)]
+pub enum PlayerEvent {
+    Update,
+    PropertyChange(MpvProperty),
+}
+
+impl<'a> TryFrom<Event<'a>> for PlayerEvent {
+    type Error = &'static str;
+
+    fn try_from(value: Event<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Event::PropertyChange { name, change, .. } => {
+                let property = match change {
+                    PropertyData::Str(value) => {
+                        MpvProperty(name.to_owned(), Some(Value::String(value.to_owned())))
+                    }
+                    PropertyData::Double(value) => MpvProperty(
+                        name.to_owned(),
+                        Some(Value::Number(Number::from_f64(value).unwrap())),
+                    ),
+                    PropertyData::Int64(value) => MpvProperty(
+                        name.to_owned(),
+                        Some(Value::Number(Number::from_i128(value.into()).unwrap())),
+                    ),
+                    PropertyData::Flag(value) => {
+                        MpvProperty(name.to_owned(), Some(Value::Bool(value)))
+                    }
+                    _ => return Err("Property not supported"),
+                };
+
+                Ok(PlayerEvent::PropertyChange(property))
+            }
+            _ => Err("Event not supported"),
+        }
+    }
+}
+
+pub struct Player {
+    mpv: Mpv,
+    event_context: EventContext,
+    render_context: Option<RenderContext>,
+    sender: Sender<PlayerEvent>,
+    receiver: Receiver<PlayerEvent>,
+}
+
+impl Player {
+    pub fn new() -> Self {
+        let mpv = Mpv::with_initializer(|init| {
+            init.set_property("vo", "libmpv")?;
+            init.set_property("video-timing-offset", "0")?;
+            // init.set_property("terminal", "yes")?;
+            // init.set_property("msg-level", "all=v")?;
+            Ok(())
+        })
+        .expect("Failed to create mpv");
+
+        let event_context = EventContext::new(mpv.ctx);
+        event_context
+            .disable_deprecated_events()
+            .expect("Failed to disable deprecated events");
+
+        let (sender, receiver) = channel::<PlayerEvent>();
+
+        Self {
+            mpv,
+            event_context,
+            render_context: None,
+            sender,
+            receiver,
+        }
+    }
+
+    pub fn setup(&mut self, context: GLContext) {
+        fn get_proc_address(context: &GLContext, name: &str) -> *mut c_void {
+            let procname = CString::new(name).unwrap();
+            context.get_proc_address(procname.as_c_str()) as _
+        }
+
+        let mpv_handle = unsafe { self.mpv.ctx.as_mut() };
+
+        let mut render_context = RenderContext::new(
+            mpv_handle,
+            vec![
+                RenderParam::ApiType(RenderParamApiType::OpenGl),
+                RenderParam::InitParams(OpenGLInitParams {
+                    get_proc_address,
+                    ctx: context,
+                }),
+                RenderParam::BlockForTargetTime(false),
+                // RenderParam::AdvancedControl(true),
+            ],
+        )
+        .expect("Failed to create render context");
+
+        let sender = self.sender.clone();
+        render_context.set_update_callback(move || {
+            sender.send(PlayerEvent::Update).ok();
+        });
+
+        self.render_context = Some(render_context);
+    }
+
+    pub fn render(&self, fbo: u32, width: i32, height: i32) {
+        if let Some(render_context) = self.render_context.as_ref() {
+            render_context
+                .render::<GLContext>(fbo as i32, width, height, false)
+                .expect("Failed to draw on glutin window");
+        }
+    }
+
+    pub fn should_render(&self) -> bool {
+        if let Some(render_context) = self.render_context.as_ref() {
+            return match render_context.update() {
+                Ok(result) => result == 1,
+                Err(_) => false,
+            };
+        }
+
+        false
+    }
+
+    pub fn report_swap(&self) {
+        if let Some(render_context) = self.render_context.as_ref() {
+            render_context.report_swap();
+        }
+    }
+
+    pub fn events<T: Fn(PlayerEvent)>(&mut self, handler: T) {
+        self.receiver.try_iter().for_each(handler);
+
+        let sender = self.sender.clone();
+        if let Some(result) = self.event_context.wait_event(0.0) {
+            match result {
+                Ok(event) => {
+                    if let Ok(player_event) = PlayerEvent::try_from(event) {
+                        sender.send(player_event).ok();
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Mpv error: {e}")
+                }
+            }
+        };
+    }
+
+    pub fn command(&self, name: String, args: Vec<String>) {
+        let args = args.iter().map(String::as_ref).collect_vec();
+        self.mpv
+            .command(&name, &args)
+            .expect("Failed to send command to mpv");
+    }
+
+    pub fn observe_property(&self, name: String) {
+        let format = match name.as_str() {
+            name if BOOL_PROPERTIES.contains(&name) => Some(Format::Flag),
+            name if STRING_PROPERTIES.contains(&name) => Some(Format::String),
+            name if FLOAT_PROPERTIES.contains(&name) => Some(Format::Double),
+            name if INT_PROPERTIES.contains(&name) => Some(Format::Int64),
+            _ => None,
+        };
+
+        if let Some(format) = format {
+            self.event_context
+                .observe_property(&name, format, 0)
+                .expect("Failed to observe property");
+        }
+    }
+
+    pub fn set_property(&self, property: MpvProperty) {
+        match property.name() {
+            name if BOOL_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::Bool(value)) = property.value() {
+                    self.mpv
+                        .set_property(name, value)
+                        .expect("Failed to set property");
+                }
+            }
+            name if STRING_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::String(value)) = property.value() {
+                    self.mpv
+                        .set_property(name, value)
+                        .expect("Failed to set property");
+                }
+            }
+            name if FLOAT_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::Float(value)) = property.value() {
+                    self.mpv
+                        .set_property(name, value)
+                        .expect("Failed to set property");
+                }
+            }
+            name if INT_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::Int(value)) = property.value() {
+                    self.mpv
+                        .set_property(name, value)
+                        .expect("Failed to set property");
+                }
+            }
+            name => eprintln!("Failed to set property: Unsupported {name}"),
+        };
+    }
+}
+
+impl Drop for Player {
+    fn drop(&mut self) {
+        self.render_context.take();
+    }
+}

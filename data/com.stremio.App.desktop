@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Stremio
+Comment=Freedom To Stream
+Icon=com.stremio.App
+Terminal=false
+StartupNotify=true
+Exec=sh -c "stremio -o '%u'"
+MimeType=x-scheme-handler/stremio;
+Type=Application
+Categories=Utility;AudioVideo;Video;Player;
+Keywords=Stremio;Media;Play;

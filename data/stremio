@@ -1,0 +1,4 @@
+#!/bin/bash
+export CEF_PATH=/usr/share/stremio
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CEF_PATH
+/usr/share/stremio/stremio "$@"

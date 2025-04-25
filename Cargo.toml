@@ -1,0 +1,58 @@
+[package]
+name = "stremio-linux-shell"
+version = "0.1.0"
+description = "Freedom to Stream"
+edition = "2024"
+license = "GPL-3.0-only"
+
+[dependencies]
+anyhow = "1.0.98"
+cef = { version = "135.0.21", git = "https://github.com/Stremio/cef-rs" }
+cef-dll-sys = { version = "135.0.21", git = "https://github.com/Stremio/cef-rs" }
+clap = { version = "4.5.37", features = ["derive"] }
+gl = "0.14.0"
+glutin = "0.32.2"
+glutin-winit = "0.5.0"
+itertools = "0.14.0"
+libmpv2 = { git = "https://github.com/Stremio/libmpv2-rs" }
+once_cell = "1.21.3"
+reqwest = { version = "0.12.15", features = ["blocking", "json"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+shellexpand = "3.1.1"
+tracing = "0.1.41"
+url = "2.5.4"
+winit = "0.30.9"
+
+[build-dependencies]
+anyhow = "1.0.98"
+bzip2 = "0.5.2"
+dircpy = "0.3.19"
+globset = "0.4.16"
+serde = "1.0.219"
+tar = "0.4.44"
+toml = "0.8.20"
+ureq = { version = "3.0.11", features = ["json"] }
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "data/stremio", dest = "/usr/bin/", mode = "755" },
+    { source = "target/release/stremio-linux-shell", dest = "/usr/share/stremio/stremio", mode = "755" },
+    { source = "cef/release/**/*", dest = "/usr/share/stremio/", mode = "644" },
+    { source = "data/icons/com.stremio.App.svg", dest = "/usr/share/icons/hicolor/scalable/apps/", mode = "644" },
+    { source = "data/com.stremio.App.desktop", dest = "/usr/share/applications/", mode = "644" },
+    { source = "data/com.stremio.App.metainfo.xml", dest = "/usr/share/metainfo/", mode = "644" },
+]
+
+[package.metadata.generate-rpm.requires]
+nodejs = ">= 10"
+
+[package.metadata.deb]
+assets = [
+    ["data/stremio", "/usr/bin/", "755"],
+    ["target/release/stremio-linux-shell", "/usr/share/stremio/stremio", "755"],
+    ["cef/release/**/*", "/usr/share/stremio/", "644"],
+    ["data/icons/com.stremio.App.svg", "/usr/share/icons/hicolor/scalable/apps/", "644"],
+    ["data/com.stremio.App.desktop", "/usr/share/applications/", "644"],
+    ["data/com.stremio.App.metainfo.xml", "/usr/share/metainfo/", "644"],
+]
