@@ -148,3 +148,43 @@ pub fn compile_shader(kind: GLenum, src: &str) -> GLuint {
         shader
     }
 }
+
+pub fn resize_pbo(pbo: GLuint, width: i32, height: i32) {
+    unsafe {
+        gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, pbo);
+
+        let mut pbo_size = 0;
+        gl::GetBufferParameteriv(gl::PIXEL_UNPACK_BUFFER, gl::BUFFER_SIZE, &mut pbo_size);
+
+        let new_size = width * height * 4;
+        if new_size > pbo_size {
+            gl::BufferData(
+                gl::PIXEL_UNPACK_BUFFER,
+                new_size as GLsizeiptr,
+                ptr::null(),
+                gl::STREAM_READ,
+            );
+        }
+
+        gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, 0);
+    }
+}
+
+pub fn resize_texture(texture: GLuint, width: i32, height: i32) {
+    unsafe {
+        gl::BindTexture(gl::TEXTURE_2D, texture);
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGBA8 as GLint,
+            width,
+            height,
+            0,
+            gl::BGRA,
+            gl::UNSIGNED_BYTE,
+            ptr::null(),
+        );
+
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+    }
+}

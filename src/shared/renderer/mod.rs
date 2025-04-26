@@ -2,7 +2,7 @@ mod utils;
 
 use std::ptr;
 
-use gl::types::{GLint, GLsizeiptr, GLuint};
+use gl::types::GLuint;
 use utils::{compile_shader, create_fbo, create_geometry, create_pbo, create_texture};
 
 const FRAGMENT_SRC: &str = include_str!("shader.frag");
@@ -79,49 +79,11 @@ impl Renderer {
             gl::Clear(gl::COLOR_BUFFER_BIT);
 
             for index in 0..self.pbos.len() {
-                gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, self.pbos[index]);
-
-                let mut pbo_size = 0;
-                gl::GetBufferParameteriv(gl::PIXEL_UNPACK_BUFFER, gl::BUFFER_SIZE, &mut pbo_size);
-
-                let new_size = width * height * 4;
-                if new_size > pbo_size {
-                    gl::BufferData(
-                        gl::PIXEL_UNPACK_BUFFER,
-                        new_size as GLsizeiptr,
-                        ptr::null(),
-                        gl::STREAM_READ,
-                    );
-                }
-
-                gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, 0);
+                utils::resize_pbo(self.pbos[index], width, height);
             }
 
-            gl::BindTexture(gl::TEXTURE_2D, self.back_texture);
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA8 as GLint,
-                width,
-                height,
-                0,
-                gl::BGRA,
-                gl::UNSIGNED_BYTE,
-                ptr::null(),
-            );
-
-            gl::BindTexture(gl::TEXTURE_2D, self.front_texture);
-            gl::TexImage2D(
-                gl::TEXTURE_2D,
-                0,
-                gl::RGBA8 as GLint,
-                width,
-                height,
-                0,
-                gl::BGRA,
-                gl::UNSIGNED_BYTE,
-                ptr::null(),
-            );
+            utils::resize_texture(self.back_texture, width, height);
+            utils::resize_texture(self.front_texture, width, height);
         }
     }
 
