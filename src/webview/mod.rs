@@ -1,13 +1,11 @@
 mod adapters;
 mod app;
+mod cef_impl;
 mod constants;
 
 use std::{
     path::Path,
-    sync::{
-        Arc, Mutex,
-        mpsc::{Receiver, Sender, channel},
-    },
+    sync::mpsc::{Receiver, Sender, channel},
 };
 
 use adapters::{NativeKeyCode, WindowsKeyCode};
@@ -28,8 +26,7 @@ use winit::{
 use crate::shared::types::{Cursor, MouseDelta, MousePosition};
 
 static SENDER: OnceCell<Sender<WebViewEvent>> = OnceCell::new();
-
-type SharedBrowser = Arc<Mutex<Option<Browser>>>;
+static BROWSER: OnceCell<Browser> = OnceCell::new();
 
 pub enum WebViewEvent {
     Ready,
@@ -43,7 +40,6 @@ pub struct WebView {
     args: Args,
     settings: Settings,
     app: App,
-    browser: SharedBrowser,
     mouse_position: MousePosition,
     receiver: Receiver<WebViewEvent>,
 }
@@ -57,8 +53,7 @@ impl WebView {
         let (sender, receiver) = channel::<WebViewEvent>();
         SENDER.get_or_init(|| sender);
 
-        let browser = Arc::new(Mutex::new(None));
-        let app = WebViewApp::new(browser.clone());
+        let app = WebViewApp::new();
 
         let cache_path = data_path.join("cef").join("cache");
         let log_path = data_path.join("cef").join("log");
@@ -77,29 +72,22 @@ impl WebView {
             args,
             settings,
             app,
-            browser,
             mouse_position: Default::default(),
             receiver,
         }
     }
 
     fn browser_host(&self) -> Option<BrowserHost> {
-        let lock = self.browser.try_lock();
-        if let Ok(guard) = lock {
-            if let Some(browser) = guard.as_ref() {
-                return browser.get_host();
-            }
+        if let Some(browser) = BROWSER.get() {
+            return browser.get_host();
         }
 
         None
     }
 
     fn main_frame(&self) -> Option<Frame> {
-        let lock = self.browser.try_lock();
-        if let Ok(guard) = lock {
-            if let Some(browser) = guard.as_ref() {
-                return browser.get_main_frame();
-            }
+        if let Some(browser) = BROWSER.get() {
+            return browser.get_main_frame();
         }
 
         None
@@ -205,40 +193,37 @@ impl WebView {
     }
 
     pub fn mouse_input_event(&self, state: ElementState, button: MouseButton) {
-        let lock = self.browser.try_lock();
-        if let Ok(guard) = lock {
-            if let Some(browser) = guard.as_ref() {
-                let mouse_up = match state {
-                    ElementState::Pressed => false,
-                    ElementState::Released => true,
-                };
+        if let Some(browser) = BROWSER.get() {
+            let mouse_up = match state {
+                ElementState::Pressed => false,
+                ElementState::Released => true,
+            };
 
-                let button_type = match button {
-                    MouseButton::Back if mouse_up => {
-                        browser.go_back();
-                        None
-                    }
-                    MouseButton::Forward if mouse_up => {
-                        browser.go_forward();
-                        None
-                    }
-                    MouseButton::Left => Some(cef_mouse_button_type_t::MBT_LEFT),
-                    MouseButton::Right => Some(cef_mouse_button_type_t::MBT_RIGHT),
-                    MouseButton::Middle => Some(cef_mouse_button_type_t::MBT_MIDDLE),
-                    _ => None,
-                };
+            let button_type = match button {
+                MouseButton::Back if mouse_up => {
+                    browser.go_back();
+                    None
+                }
+                MouseButton::Forward if mouse_up => {
+                    browser.go_forward();
+                    None
+                }
+                MouseButton::Left => Some(cef_mouse_button_type_t::MBT_LEFT),
+                MouseButton::Right => Some(cef_mouse_button_type_t::MBT_RIGHT),
+                MouseButton::Middle => Some(cef_mouse_button_type_t::MBT_MIDDLE),
+                _ => None,
+            };
 
-                if let Some(button_type) = button_type {
-                    if let Some(host) = browser.get_host() {
-                        let event = self.mouse_position.into();
+            if let Some(button_type) = button_type {
+                if let Some(host) = browser.get_host() {
+                    let event = self.mouse_position.into();
 
-                        host.send_mouse_click_event(
-                            Some(&event),
-                            button_type.into(),
-                            mouse_up.into(),
-                            1,
-                        );
-                    }
+                    host.send_mouse_click_event(
+                        Some(&event),
+                        button_type.into(),
+                        mouse_up.into(),
+                        1,
+                    );
                 }
             }
         }
