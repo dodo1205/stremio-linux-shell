@@ -137,7 +137,7 @@ impl ApplicationHandler for App {
         });
 
         GL_CONTEXT.get_or_init(|| Mutex::new(Some(context)));
-        GL_SURFACE.get_or_init(|| Mutex::new(surface));
+        GL_SURFACE.get_or_init(|| Mutex::new(Some(surface)));
 
         self.window = window;
 

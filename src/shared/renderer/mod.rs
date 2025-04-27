@@ -82,7 +82,7 @@ impl Renderer {
             gl::Viewport(0, 0, width, height);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-            
+
             utils::resize_pbo(self.pbo, width, height);
             utils::resize_texture(self.back_texture, width, height);
             utils::resize_texture(self.front_texture, width, height);
