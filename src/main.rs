@@ -13,7 +13,7 @@ use glutin::{display::GetGlDisplay, surface::GlSurface};
 use ipc::{IpcEvent, IpcEventMpv};
 use player::{Player, PlayerEvent};
 use server::Server;
-use shared::{RENDERER, with_gl};
+use shared::{with_gl, with_renderer_read, with_renderer_write};
 use std::{
     fs, num::NonZeroU32, path::Path, process::ExitCode, rc::Rc, sync::mpsc::channel, thread,
     time::Duration,
@@ -101,11 +101,9 @@ fn main() -> ExitCode {
                         NonZeroU32::new(size.1 as u32).unwrap(),
                     );
 
-                    if let Some(lock) = RENDERER.get() {
-                        if let Ok(mut renderer) = lock.write() {
-                            renderer.resize(size.0, size.1);
-                        }
-                    }
+                    with_renderer_write(|mut renderer| {
+                        renderer.resize(size.0, size.1);
+                    });
 
                     webview.resized();
                     webview.repaint();
@@ -185,23 +183,22 @@ fn main() -> ExitCode {
         bridge_rx.try_iter().for_each(|event| match event {
             BridgeEvent::Draw => {
                 with_gl(|surface, context| {
-                    if let Some(lock) = RENDERER.get() {
-                        let renderer = lock.read().unwrap();
+                    let should_render = player.should_render();
 
-                        let should_render = player.should_render();
+                    with_renderer_read(|renderer| {
                         if should_render {
                             player.render(renderer.fbo, renderer.width, renderer.height);
                         }
 
                         renderer.draw();
+                    });
 
-                        surface
-                            .swap_buffers(context)
-                            .expect("Failed to swap buffers");
+                    surface
+                        .swap_buffers(context)
+                        .expect("Failed to swap buffers");
 
-                        if should_render {
-                            player.report_swap();
-                        }
+                    if should_render {
+                        player.report_swap();
                     }
                 });
             }

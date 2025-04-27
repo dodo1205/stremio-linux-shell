@@ -1,6 +1,6 @@
 use crate::{
     WebViewEvent, cef_impl,
-    shared::{RENDERER, with_gl},
+    shared::{with_gl, with_renderer_read, with_renderer_write},
     webview::SENDER,
 };
 
@@ -10,18 +10,16 @@ cef_impl!(
     sys_type = cef_dll_sys::cef_render_handler_t,
     {
         fn get_view_rect(&self, _browser: Option<&mut impl ImplBrowser>, rect: Option<&mut Rect>) {
-            if let Some(lock) = RENDERER.get() {
-                if let Ok(renderer) = lock.read() {
-                    if let Some(rect) = rect {
-                        *rect = Rect {
-                            x: 0,
-                            y: 0,
-                            width: renderer.width,
-                            height: renderer.height,
-                        };
-                    }
+            with_renderer_read(|renderer| {
+                if let Some(rect) = rect {
+                    *rect = Rect {
+                        x: 0,
+                        y: 0,
+                        width: renderer.width,
+                        height: renderer.height,
+                    };
                 }
-            }
+            });
         }
 
         fn on_paint(
@@ -35,22 +33,13 @@ cef_impl!(
             height: ::std::os::raw::c_int,
         ) {
             with_gl(|_, _| {
-                if let Some(lock) = RENDERER.get() {
-                    if let Ok(mut renderer) = lock.write() {
-                        if let Some(dirty) = dirty_rects {
-                            renderer.paint(
-                                dirty.x,
-                                dirty.y,
-                                dirty.width,
-                                dirty.height,
-                                buffer,
-                                width,
-                            );
-                        } else {
-                            renderer.paint(0, 0, width, height, buffer, width);
-                        }
+                with_renderer_write(|mut renderer| {
+                    if let Some(dirty) = dirty_rects {
+                        renderer.paint(dirty.x, dirty.y, dirty.width, dirty.height, buffer, width);
+                    } else {
+                        renderer.paint(0, 0, width, height, buffer, width);
                     }
-                }
+                });
             });
 
             if let Some(sender) = SENDER.get() {

@@ -1,7 +1,7 @@
 mod renderer;
 pub mod types;
 
-use std::sync::{Mutex, MutexGuard, RwLock};
+use std::sync::{Mutex, MutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use glutin::{
     context::{NotCurrentContext, PossiblyCurrentContext},
@@ -43,5 +43,21 @@ pub fn with_gl<T: FnMut(MutexGuard<Surface<WindowSurface>>, &PossiblyCurrentCont
                 }
             }
         };
+    }
+}
+
+pub fn with_renderer_read<T: FnOnce(RwLockReadGuard<Renderer>)>(handler: T) {
+    if let Some(lock) = RENDERER.get() {
+        if let Ok(renderer) = lock.read() {
+            handler(renderer)
+        }
+    }
+}
+
+pub fn with_renderer_write<T: FnOnce(RwLockWriteGuard<Renderer>)>(handler: T) {
+    if let Some(lock) = RENDERER.get() {
+        if let Ok(renderer) = lock.write() {
+            handler(renderer)
+        }
     }
 }
