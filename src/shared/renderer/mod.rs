@@ -2,7 +2,7 @@ mod utils;
 
 use std::ptr;
 
-use gl::types::GLuint;
+use gl::types::{GLint, GLuint};
 use utils::{compile_shader, create_fbo, create_geometry, create_pbo, create_texture};
 
 const FRAGMENT_SRC: &str = include_str!("shader.frag");
@@ -13,7 +13,9 @@ const BYTES_PER_PIXEL: usize = 4;
 pub struct Renderer {
     pub program: GLuint,
     pub front_texture: GLuint,
+    pub front_uniform: GLint,
     pub back_texture: GLuint,
+    pub back_uniform: GLint,
     pub vao: GLuint,
     pub vbo: GLuint,
     pub fbo: GLuint,
@@ -41,7 +43,10 @@ impl Renderer {
             gl::DeleteShader(fragment_shader);
 
             let front_texture = create_texture(width, height);
+            let front_uniform = gl::GetUniformLocation(program, b"front_texture\0".as_ptr() as _);
+
             let back_texture = create_texture(width, height);
+            let back_uniform = gl::GetUniformLocation(program, b"back_texture\0".as_ptr() as _);
 
             let (vao, vbo) = create_geometry(program);
             let fbo = create_fbo(back_texture);
@@ -56,7 +61,9 @@ impl Renderer {
             Self {
                 program,
                 front_texture,
+                front_uniform,
                 back_texture,
+                back_uniform,
                 vao,
                 vbo,
                 fbo,
@@ -146,17 +153,11 @@ impl Renderer {
 
             gl::ActiveTexture(gl::TEXTURE0);
             gl::BindTexture(gl::TEXTURE_2D, self.back_texture);
-            gl::Uniform1i(
-                gl::GetUniformLocation(self.program, c"back_texture".as_ptr() as _),
-                0,
-            );
+            gl::Uniform1i(self.back_uniform, 0);
 
             gl::ActiveTexture(gl::TEXTURE1);
             gl::BindTexture(gl::TEXTURE_2D, self.front_texture);
-            gl::Uniform1i(
-                gl::GetUniformLocation(self.program, c"front_texture".as_ptr() as _),
-                1,
-            );
+            gl::Uniform1i(self.front_uniform, 1);
 
             gl::BindVertexArray(self.vao);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
