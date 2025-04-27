@@ -19,8 +19,7 @@ pub struct Renderer {
     pub vao: GLuint,
     pub vbo: GLuint,
     pub fbo: GLuint,
-    pub pbos: [GLuint; 2],
-    pub pbo_index: usize,
+    pub pbo: GLuint,
     pub width: i32,
     pub height: i32,
     pub refresh_rate: u32,
@@ -51,7 +50,7 @@ impl Renderer {
             let (vao, vbo) = create_geometry(program);
             let fbo = create_fbo(back_texture);
 
-            let pbos = [create_pbo(width, height), create_pbo(width, height)];
+            let pbo = create_pbo(width, height);
 
             let status = gl::CheckFramebufferStatus(gl::FRAMEBUFFER);
             if status != gl::FRAMEBUFFER_COMPLETE {
@@ -67,8 +66,7 @@ impl Renderer {
                 vao,
                 vbo,
                 fbo,
-                pbos,
-                pbo_index: 0,
+                pbo,
                 width,
                 height,
                 refresh_rate,
@@ -84,18 +82,15 @@ impl Renderer {
             gl::Viewport(0, 0, width, height);
             gl::ClearColor(0.0, 0.0, 0.0, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT);
-
-            for index in 0..self.pbos.len() {
-                utils::resize_pbo(self.pbos[index], width, height);
-            }
-
+            
+            utils::resize_pbo(self.pbo, width, height);
             utils::resize_texture(self.back_texture, width, height);
             utils::resize_texture(self.front_texture, width, height);
         }
     }
 
     pub fn paint(
-        &mut self,
+        &self,
         x: i32,
         y: i32,
         width: i32,
@@ -104,7 +99,7 @@ impl Renderer {
         full_width: i32,
     ) {
         unsafe {
-            gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, self.pbos[self.pbo_index]);
+            gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, self.pbo);
 
             let row_bytes = width as usize * BYTES_PER_PIXEL;
             let stride = full_width as usize * BYTES_PER_PIXEL;
@@ -138,8 +133,6 @@ impl Renderer {
             );
 
             gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, 0);
-
-            self.pbo_index = (self.pbo_index + 1) % self.pbos.len();
         }
     }
 
@@ -175,7 +168,7 @@ impl Drop for Renderer {
             gl::DeleteTextures(1, &self.back_texture);
             gl::DeleteBuffers(1, &self.vbo);
             gl::DeleteVertexArrays(1, &self.vao);
-            gl::DeleteBuffers(2, self.pbos.as_ptr());
+            gl::DeleteBuffers(1, &self.pbo);
             gl::DeleteBuffers(1, &self.fbo);
         }
     }
