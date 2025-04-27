@@ -120,6 +120,9 @@ fn main() -> ExitCode {
             AppEvent::MouseInput((state, button)) => {
                 webview.mouse_input_event(state, button);
             }
+            AppEvent::TouchInput(touch) => {
+                webview.touch_event(touch);
+            }
             AppEvent::KeyboardInput(key_event) => {
                 webview.keyboard_input_event(key_event);
             }

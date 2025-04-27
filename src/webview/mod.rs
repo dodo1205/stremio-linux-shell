@@ -17,11 +17,12 @@ use cef::{
 };
 use cef_dll_sys::{
     cef_key_event_type_t, cef_log_severity_t, cef_mouse_button_type_t, cef_paint_element_type_t,
+    cef_pointer_type_t, cef_touch_event_type_t,
 };
 use constants::IPC_SENDER;
 use once_cell::sync::OnceCell;
 use winit::{
-    event::{ElementState, KeyEvent, MouseButton},
+    event::{ElementState, KeyEvent, MouseButton, Touch, TouchPhase},
     keyboard::{Key, PhysicalKey},
 };
 
@@ -233,6 +234,27 @@ impl WebView {
                     );
                 }
             }
+        }
+    }
+
+    pub fn touch_event(&self, touch: Touch) {
+        if let Some(host) = self.browser_host() {
+            let event_type = match touch.phase {
+                TouchPhase::Started => cef_touch_event_type_t::CEF_TET_PRESSED,
+                TouchPhase::Ended => cef_touch_event_type_t::CEF_TET_RELEASED,
+                TouchPhase::Moved => cef_touch_event_type_t::CEF_TET_MOVED,
+                TouchPhase::Cancelled => cef_touch_event_type_t::CEF_TET_CANCELLED,
+            };
+
+            let event = cef::TouchEvent {
+                type_: event_type.into(),
+                pointer_type: cef_pointer_type_t::CEF_POINTER_TYPE_TOUCH.into(),
+                x: touch.location.x as f32,
+                y: touch.location.y as f32,
+                ..Default::default()
+            };
+
+            host.send_touch_event(Some(&event));
         }
     }
 

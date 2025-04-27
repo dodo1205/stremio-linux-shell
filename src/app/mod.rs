@@ -19,7 +19,7 @@ use glutin_winit::DisplayBuilder;
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{ElementState, KeyEvent, MouseButton, WindowEvent},
+    event::{ElementState, KeyEvent, MouseButton, Touch, WindowEvent},
     event_loop::ActiveEventLoop,
     platform::wayland::WindowAttributesExtWayland,
     window::{CursorIcon, Fullscreen, Window, WindowAttributes},
@@ -41,6 +41,7 @@ pub enum AppEvent {
     MouseMoved(MousePosition),
     MouseWheel(MouseDelta),
     MouseInput((ElementState, MouseButton)),
+    TouchInput(Touch),
     KeyboardInput(KeyEvent),
 }
 
@@ -162,6 +163,9 @@ impl ApplicationHandler for App {
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 self.sender.send(AppEvent::MouseInput((state, button))).ok();
+            }
+            WindowEvent::Touch(touch) => {
+                self.sender.send(AppEvent::TouchInput(touch)).ok();
             }
             WindowEvent::Resized(size) => {
                 self.sender.send(AppEvent::Resized(size.into())).ok();
