@@ -15,7 +15,9 @@ use cef::{
     ImplBrowserHost, ImplCommandLine, ImplFrame, LogSeverity, Settings, api_hash, args::Args,
     execute_process, initialize,
 };
-use cef_dll_sys::{cef_key_event_type_t, cef_log_severity_t, cef_mouse_button_type_t};
+use cef_dll_sys::{
+    cef_key_event_type_t, cef_log_severity_t, cef_mouse_button_type_t, cef_paint_element_type_t,
+};
 use constants::IPC_SENDER;
 use once_cell::sync::OnceCell;
 use winit::{
@@ -171,8 +173,13 @@ impl WebView {
 
     pub fn resized(&mut self) {
         if let Some(host) = self.browser_host() {
-            host.was_hidden(0);
             host.was_resized();
+        }
+    }
+
+    pub fn repaint(&self) {
+        if let Some(host) = self.browser_host() {
+            host.invalidate(cef_paint_element_type_t::PET_VIEW.into());
         }
     }
 

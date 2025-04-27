@@ -23,22 +23,24 @@ pub static GL_CONTEXT: OnceCell<Mutex<Option<NotCurrentContext>>> = OnceCell::ne
 pub fn with_gl<T: FnMut(MutexGuard<Surface<WindowSurface>>, &PossiblyCurrentContext)>(
     mut handler: T,
 ) {
-    if let Some(context) = GL_CONTEXT.get() {
-        if let Some(surface) = GL_SURFACE.get() {
-            let mut guard = context.lock().unwrap();
-            if let Some(context) = guard.take() {
-                let surface = surface.lock().unwrap();
-                let current_context = context
-                    .make_current(&surface)
-                    .expect("Failed to make context current");
+    if let Some(surface) = GL_SURFACE.get() {
+        if let Ok(surface) = surface.lock() {
+            if let Some(context) = GL_CONTEXT.get() {
+                if let Ok(mut guard) = context.lock() {
+                    if let Some(context) = guard.take() {
+                        let current_context = context
+                            .make_current(&surface)
+                            .expect("Failed to make context current");
 
-                handler(surface, &current_context);
+                        handler(surface, &current_context);
 
-                let not_current_context = current_context
-                    .make_not_current()
-                    .expect("Failed to make context not current");
+                        let not_current_context = current_context
+                            .make_not_current()
+                            .expect("Failed to make context not current");
 
-                *guard = Some(not_current_context);
+                        *guard = Some(not_current_context);
+                    }
+                }
             }
         };
     }

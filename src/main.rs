@@ -102,11 +102,13 @@ fn main() -> ExitCode {
                     );
 
                     if let Some(lock) = RENDERER.get() {
-                        let mut renderer = lock.write().unwrap();
-                        renderer.resize(size.0, size.1);
+                        if let Ok(mut renderer) = lock.write() {
+                            renderer.resize(size.0, size.1);
+                        }
                     }
 
                     webview.resized();
+                    webview.repaint();
                 });
             }
             AppEvent::MouseMoved(position) => {
