@@ -13,7 +13,7 @@ use glutin::{display::GetGlDisplay, surface::GlSurface};
 use ipc::{IpcEvent, IpcEventMpv};
 use player::{Player, PlayerEvent};
 use server::Server;
-use shared::{with_gl, with_renderer_read, with_renderer_write};
+use shared::{drop_renderer, with_gl, with_renderer_read, with_renderer_write};
 use std::{
     fs, num::NonZeroU32, path::Path, process::ExitCode, rc::Rc, sync::mpsc::channel, thread,
     time::Duration,
@@ -78,6 +78,7 @@ fn main() -> ExitCode {
         if let PumpStatus::Exit(exit_code) = status {
             server.stop().expect("Failed to stop server");
             webview.stop();
+            drop_renderer();
 
             break ExitCode::from(exit_code as u8);
         }
@@ -101,7 +102,7 @@ fn main() -> ExitCode {
                         NonZeroU32::new(size.1 as u32).unwrap(),
                     );
 
-                    with_renderer_write(|mut renderer| {
+                    with_renderer_write(|renderer| {
                         renderer.resize(size.0, size.1);
                     });
 

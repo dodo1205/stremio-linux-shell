@@ -1,7 +1,7 @@
 mod renderer;
 pub mod types;
 
-use std::sync::{Mutex, MutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::sync::{Mutex, MutexGuard, RwLock};
 
 use glutin::{
     context::{NotCurrentContext, PossiblyCurrentContext},
@@ -11,10 +11,10 @@ use glutin::{
 use once_cell::sync::OnceCell;
 use renderer::Renderer;
 
-pub static RENDERER: OnceCell<RwLock<Renderer>> = OnceCell::new();
+pub static RENDERER: OnceCell<RwLock<Option<Renderer>>> = OnceCell::new();
 
 pub fn create_renderer(default_size: (i32, i32), refresh_rate: u32) {
-    RENDERER.get_or_init(|| RwLock::new(Renderer::new(default_size, refresh_rate)));
+    RENDERER.get_or_init(|| RwLock::new(Some(Renderer::new(default_size, refresh_rate))));
 }
 
 pub static GL_SURFACE: OnceCell<Mutex<Surface<WindowSurface>>> = OnceCell::new();
@@ -46,18 +46,30 @@ pub fn with_gl<T: FnMut(MutexGuard<Surface<WindowSurface>>, &PossiblyCurrentCont
     }
 }
 
-pub fn with_renderer_read<T: FnOnce(RwLockReadGuard<Renderer>)>(handler: T) {
+pub fn with_renderer_read<T: FnOnce(&Renderer)>(handler: T) {
     if let Some(lock) = RENDERER.get() {
         if let Ok(renderer) = lock.read() {
-            handler(renderer)
+            if let Some(renderer) = renderer.as_ref() {
+                handler(renderer)
+            }
         }
     }
 }
 
-pub fn with_renderer_write<T: FnOnce(RwLockWriteGuard<Renderer>)>(handler: T) {
+pub fn with_renderer_write<T: FnOnce(&mut Renderer)>(handler: T) {
     if let Some(lock) = RENDERER.get() {
-        if let Ok(renderer) = lock.write() {
-            handler(renderer)
+        if let Ok(mut renderer) = lock.write() {
+            if let Some(renderer) = renderer.as_mut() {
+                handler(renderer)
+            }
+        }
+    }
+}
+
+pub fn drop_renderer() {
+    if let Some(lock) = RENDERER.get() {
+        if let Ok(mut renderer) = lock.write() {
+            renderer.take();
         }
     }
 }
