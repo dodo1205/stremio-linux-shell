@@ -3,7 +3,7 @@
 ## Development
 
 ```bash
-git clone https://github.com/Stremio/stremio-linux-shell
+git clone --recurse-submodules https://github.com/Stremio/stremio-linux-shell
 ```
 
 This Project is using [`winit`](https://github.com/rust-windowing/winit) + [`glutin`](https://github.com/rust-windowing/glutin) with [`libmpv`](https://github.com/mpv-player/mpv/blob/master/DOCS/man/libmpv.rst) and [`CEF`](https://github.com/chromiumembedded/cef)
@@ -13,39 +13,36 @@ This Project is using [`winit`](https://github.com/rust-windowing/winit) + [`glu
 `libmpv` is used for the player  
 `CEF` is used for the web UI  
 
-### Prerequisites
-
-To setup CEF, run this command:  
-*This can take a while but only need to be done once*
-```bash
-cargo build -vv
-```
-
-#### Fedora
-```bash
-dnf install mpv-devel
-cargo install cargo-generate-rpm
-```
-
-#### Ubuntu
-```bash
-apt install build-essential libssl-dev libnss3 libmpv-dev
-cargo install cargo-deb
-```
-
 ### Building
 
 #### Fedora
 ```bash
+dnf install mpv-devel flatpak-builder
+```
+
+```bash
 cargo build --release
-strip -s target/release/stremio-linux-shell
-cargo generate-rpm
-#> target/generate-rpm/*.rpm
 ```
 
 #### Ubuntu
 ```bash
+apt install build-essential libssl-dev libnss3 libmpv-dev flatpak-builder
+```
+
+```bash
 cargo build --release
-cargo deb
-#> target/debian/*.deb
+```
+
+#### Flatpak
+```bash
+flatpak install -y \
+    org.freedesktop.Sdk//24.08 \
+    org.freedesktop.Platform//24.08 \
+    org.freedesktop.Sdk.Extension.rust-stable//24.08 \
+    org.freedesktop.Platform.ffmpeg-full//24.08
+python3 -m pip install toml aiohttp
+```
+
+```bash
+./build-aux/flatpak/build.sh
 ```
