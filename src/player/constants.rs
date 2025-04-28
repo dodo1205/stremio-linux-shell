@@ -1,3 +1,15 @@
+pub const INT_PROPERTIES: &[&str] = &["sid", "aid"];
+
+pub const FLOAT_PROPERTIES: &[&str] = &[
+    "time-pos",
+    "duration",
+    "volume",
+    "speed",
+    "sub-pos",
+    "sub-scale",
+    "sub-delay",
+];
+
 pub const BOOL_PROPERTIES: &[&str] = &[
     "pause",
     "mute",
@@ -18,15 +30,3 @@ pub const STRING_PROPERTIES: &[&str] = &[
     "sub-back-color",
     "sub-border-color",
 ];
-
-pub const FLOAT_PROPERTIES: &[&str] = &[
-    "time-pos",
-    "duration",
-    "volume",
-    "speed",
-    "sub-pos",
-    "sub-scale",
-    "sub-delay",
-];
-
-pub const INT_PROPERTIES: &[&str] = &["sid", "aid"];

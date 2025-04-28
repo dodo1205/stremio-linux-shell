@@ -22,10 +22,10 @@ pub type GLContext = Rc<Display>;
 
 #[derive(Debug)]
 pub enum MpvPropertyValue {
+    Int(i64),
+    Float(f64),
     Bool(bool),
     String(String),
-    Float(f64),
-    Int(i64),
 }
 
 impl Serialize for MpvPropertyValue {
@@ -34,10 +34,16 @@ impl Serialize for MpvPropertyValue {
         S: serde::Serializer,
     {
         match self {
-            MpvPropertyValue::Bool(value) => serializer.serialize_bool(*value),
-            MpvPropertyValue::String(value) => serializer.serialize_str(value),
-            MpvPropertyValue::Float(value) => serializer.serialize_f64(*value),
             MpvPropertyValue::Int(value) => serializer.serialize_i64(*value),
+            MpvPropertyValue::Float(value) => serializer.serialize_f64(*value),
+            MpvPropertyValue::Bool(value) => serializer.serialize_bool(*value),
+            MpvPropertyValue::String(value) => {
+                if let Ok(json_value) = serde_json::from_str::<Value>(value) {
+                    json_value.serialize(serializer)
+                } else {
+                    serializer.serialize_str(value)
+                }
+            }
         }
     }
 }
@@ -52,6 +58,18 @@ impl MpvProperty {
 
     pub fn value(&self) -> Result<MpvPropertyValue, &'static str> {
         if let Some(value) = self.1.clone() {
+            if INT_PROPERTIES.contains(&self.name()) {
+                return serde_json::from_value::<i64>(value)
+                    .map(MpvPropertyValue::Int)
+                    .map_err(|_| "Failed to get i64 from Value");
+            }
+
+            if FLOAT_PROPERTIES.contains(&self.name()) {
+                return serde_json::from_value::<f64>(value)
+                    .map(MpvPropertyValue::Float)
+                    .map_err(|_| "Failed to get f64 from Value");
+            }
+
             if BOOL_PROPERTIES.contains(&self.name()) {
                 return serde_json::from_value::<bool>(value)
                     .map(MpvPropertyValue::Bool)
@@ -62,18 +80,6 @@ impl MpvProperty {
                 return serde_json::from_value::<String>(value)
                     .map(MpvPropertyValue::String)
                     .map_err(|_| "Failed to get String from Value");
-            }
-
-            if FLOAT_PROPERTIES.contains(&self.name()) {
-                return serde_json::from_value::<f64>(value)
-                    .map(MpvPropertyValue::Float)
-                    .map_err(|_| "Failed to get f64 from Value");
-            }
-
-            if INT_PROPERTIES.contains(&self.name()) {
-                return serde_json::from_value::<i64>(value)
-                    .map(MpvPropertyValue::Int)
-                    .map_err(|_| "Failed to get i64 from Value");
             }
         }
 
@@ -110,19 +116,19 @@ impl<'a> TryFrom<Event<'a>> for PlayerEvent {
         match value {
             Event::PropertyChange { name, change, .. } => {
                 let property = match change {
-                    PropertyData::Str(value) => {
-                        MpvProperty(name.to_owned(), Some(Value::String(value.to_owned())))
-                    }
-                    PropertyData::Double(value) => MpvProperty(
-                        name.to_owned(),
-                        Some(Value::Number(Number::from_f64(value).unwrap())),
-                    ),
                     PropertyData::Int64(value) => MpvProperty(
                         name.to_owned(),
                         Some(Value::Number(Number::from_i128(value.into()).unwrap())),
                     ),
+                    PropertyData::Double(value) => MpvProperty(
+                        name.to_owned(),
+                        Some(Value::Number(Number::from_f64(value).unwrap())),
+                    ),
                     PropertyData::Flag(value) => {
                         MpvProperty(name.to_owned(), Some(Value::Bool(value)))
+                    }
+                    PropertyData::Str(value) => {
+                        MpvProperty(name.to_owned(), Some(Value::String(value.to_owned())))
                     }
                     _ => return Err("Property not supported"),
                 };
@@ -251,10 +257,10 @@ impl Player {
 
     pub fn observe_property(&self, name: String) {
         let format = match name.as_str() {
+            name if INT_PROPERTIES.contains(&name) => Some(Format::Int64),
+            name if FLOAT_PROPERTIES.contains(&name) => Some(Format::Double),
             name if BOOL_PROPERTIES.contains(&name) => Some(Format::Flag),
             name if STRING_PROPERTIES.contains(&name) => Some(Format::String),
-            name if FLOAT_PROPERTIES.contains(&name) => Some(Format::Double),
-            name if INT_PROPERTIES.contains(&name) => Some(Format::Int64),
             _ => None,
         };
 
@@ -267,15 +273,8 @@ impl Player {
 
     pub fn set_property(&self, property: MpvProperty) {
         match property.name() {
-            name if BOOL_PROPERTIES.contains(&name) => {
-                if let Ok(MpvPropertyValue::Bool(value)) = property.value() {
-                    self.mpv
-                        .set_property(name, value)
-                        .expect("Failed to set property");
-                }
-            }
-            name if STRING_PROPERTIES.contains(&name) => {
-                if let Ok(MpvPropertyValue::String(value)) = property.value() {
+            name if INT_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::Int(value)) = property.value() {
                     self.mpv
                         .set_property(name, value)
                         .expect("Failed to set property");
@@ -288,8 +287,15 @@ impl Player {
                         .expect("Failed to set property");
                 }
             }
-            name if INT_PROPERTIES.contains(&name) => {
-                if let Ok(MpvPropertyValue::Int(value)) = property.value() {
+            name if BOOL_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::Bool(value)) = property.value() {
+                    self.mpv
+                        .set_property(name, value)
+                        .expect("Failed to set property");
+                }
+            }
+            name if STRING_PROPERTIES.contains(&name) => {
+                if let Ok(MpvPropertyValue::String(value)) = property.value() {
                     self.mpv
                         .set_property(name, value)
                         .expect("Failed to set property");
