@@ -14,6 +14,7 @@ macro_rules! cef_impl {
             }
 
             impl [<$prefix $name>] {
+                #[allow(clippy::new_ret_no_self)]
                 pub fn new() -> $name {
                     $name::new(Self {
                         object: std::ptr::null_mut(),
