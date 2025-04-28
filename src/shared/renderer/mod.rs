@@ -42,10 +42,10 @@ impl Renderer {
             gl::DeleteShader(fragment_shader);
 
             let front_texture = create_texture(width, height);
-            let front_uniform = gl::GetUniformLocation(program, b"front_texture\0".as_ptr() as _);
+            let front_uniform = gl::GetUniformLocation(program, c"front_texture".as_ptr() as _);
 
             let back_texture = create_texture(width, height);
-            let back_uniform = gl::GetUniformLocation(program, b"back_texture\0".as_ptr() as _);
+            let back_uniform = gl::GetUniformLocation(program, c"back_texture".as_ptr() as _);
 
             let (vao, vbo) = create_geometry(program);
             let fbo = create_fbo(back_texture);

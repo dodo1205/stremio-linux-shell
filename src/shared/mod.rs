@@ -56,7 +56,7 @@ pub fn with_gl<T: FnMut(&Surface<WindowSurface>, &PossiblyCurrentContext)>(mut h
                     if let Ok(mut guard) = context.lock() {
                         if let Some(context) = guard.take() {
                             let current_context = context
-                                .make_current(&surface)
+                                .make_current(surface)
                                 .expect("Failed to make context current");
 
                             handler(surface, &current_context);
