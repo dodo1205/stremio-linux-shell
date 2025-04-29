@@ -29,7 +29,7 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install build-essential libssl-dev libnss3 libmpv-dev flatpak-builder
           sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install -y \
+          sudo flatpak install -y \
             org.freedesktop.Sdk//24.08 \
             org.freedesktop.Platform//24.08 \
             org.freedesktop.Sdk.Extension.rust-stable//24.08 \
