@@ -6,6 +6,9 @@ description = "Freedom to Stream"
 edition = "2024"
 license = "GPL-3.0-only"
 
+[features]
+offline-build = []
+
 [dependencies]
 anyhow = "1.0.98"
 cef = { version = "135.0.21", git = "https://github.com/Stremio/cef-rs" }

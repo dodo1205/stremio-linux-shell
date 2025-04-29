@@ -50,6 +50,7 @@ pub struct CefIndex {
 fn main() -> Result<()> {
     let cef_path = PathBuf::from(std::env::var("CEF_PATH")?);
 
+    #[cfg(not(feature = "offline-build"))]
     if !cef_path.exists() {
         let cef_version = get_version()?;
         let archive_name = get_archive_name(cef_version)?;
