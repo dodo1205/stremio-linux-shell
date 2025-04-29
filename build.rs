@@ -2,20 +2,17 @@ use std::{
     fs::{self, File},
     io::BufReader,
     path::{Path, PathBuf},
-    process::Command,
 };
 
-use anyhow::{Context, Error, Ok, Result};
+use anyhow::{Error, Ok, Result};
 use bzip2::bufread::BzDecoder;
-use dircpy::copy_dir;
-use globset::{Glob, GlobBuilder};
+use globset::GlobBuilder;
 use serde::{Deserialize, Serialize};
 use toml::Value;
 
 const CEF_CDN: &str = "https://cef-builds.spotifycdn.com";
 const CEF_CDN_INDEX: &str = "index.json";
 const CEF_FILE_TYPE: &str = "minimal";
-const CEF_OUT: &str = "cef";
 const CEF_ARCHIVE_FILES: &[[&str; 2]] = &[
     ["*/Resources/locales/**", "locales"],
     ["*/Resources/*.pak", ""],
@@ -51,36 +48,24 @@ pub struct CefIndex {
 }
 
 fn main() -> Result<()> {
-    let cef_version = get_version()?;
-
-    let cef_path = PathBuf::from(CEF_OUT);
-    let debug_path = cef_path.join("debug");
-    let release_path = cef_path.join("release");
+    let cef_path = PathBuf::from(std::env::var("CEF_PATH")?);
 
     if !cef_path.exists() {
+        let cef_version = get_version()?;
         let archive_name = get_archive_name(cef_version)?;
         let archive_url = format!("{CEF_CDN}/{}", archive_name);
         let archive_path = cef_path.join(archive_name);
-        let archive_out_path = cef_path.join("archive");
 
         fs::create_dir_all(&cef_path)?;
         download_archive(&archive_url, &archive_path)?;
-        unpack_archive(&archive_path, &archive_out_path)?;
+        unpack_archive(&archive_path, &cef_path)?;
         fs::remove_file(&archive_path)?;
-
-        copy_dir(&archive_out_path, &debug_path)?;
-        copy_dir(&archive_out_path, &release_path)?;
-        fs::remove_dir_all(archive_out_path)?;
-
-        strip_symbols(&release_path, "*.so")?;
     }
 
-    let ld_library_path = match cfg!(debug_assertions) {
-        true => debug_path.to_str().unwrap(),
-        false => release_path.to_str().unwrap(),
-    };
-
-    println!("cargo:rustc-env=LD_LIBRARY_PATH={}", ld_library_path);
+    println!(
+        "cargo:rustc-env=LD_LIBRARY_PATH={}",
+        cef_path.to_str().unwrap()
+    );
 
     Ok(())
 }
@@ -171,25 +156,6 @@ fn unpack_archive(path: &Path, out: &Path) -> Result<()> {
                     }
                 }
             }
-        }
-    }
-
-    Ok(())
-}
-
-fn strip_symbols(path: &Path, glob: &str) -> Result<()> {
-    println!("Stripping symbols...");
-
-    let glob = Glob::new(glob)?.compile_matcher();
-
-    for entry in fs::read_dir(path)? {
-        let path = entry?.path();
-
-        if glob.is_match(&path) {
-            let mut command = Command::new("strip");
-            command.arg("-s");
-            command.arg(path.to_str().unwrap());
-            command.spawn().context("Failed to strip symbols")?;
         }
     }
 
