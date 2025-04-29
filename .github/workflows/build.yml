@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install build-essential libssl-dev libnss3 libmpv-dev flatpak-builder
+          sudo apt-get -y install build-essential libssl-dev libnss3 libmpv-dev
 
       - name: Lint fmt
         run: cargo fmt --all -- --check
