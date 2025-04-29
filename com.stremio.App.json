@@ -22,7 +22,6 @@
         "--share=network",
         "--device=dri",
         "--filesystem=xdg-data/stremio",
-        "--env=CEF_PATH=/app/share/stremio",
         "--env=LD_LIBRARY_PATH=/app/share/stremio",
         "--system-talk-name=org.freedesktop.systemd1",
         "--system-talk-name=org.freedesktop.UPower"
@@ -30,7 +29,8 @@
     "build-options": {
         "append-path": "/usr/lib/sdk/rust-stable/bin",
         "env": {
-            "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/lib64/pkgconfig"
+            "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/lib64/pkgconfig",
+            "CEF_PATH": "/app/share/stremio"
         }
     },
     "modules": [
@@ -45,7 +45,7 @@
             },
             "build-commands": [
                 "cargo --offline fetch --manifest-path Cargo.toml --verbose",
-                "cargo --offline build --release --verbose"
+                "cargo --offline build --release --verbose -F offline-build"
             ],
             "post-install": [
                 "install -Dm755 data/stremio -t /app/bin/",
