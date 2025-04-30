@@ -21,6 +21,7 @@ use winit::{
     dpi::PhysicalSize,
     event::{ElementState, KeyEvent, MouseButton, Touch, WindowEvent},
     event_loop::ActiveEventLoop,
+    keyboard::ModifiersState,
     platform::wayland::WindowAttributesExtWayland,
     window::{CursorIcon, Fullscreen, Window, WindowAttributes},
 };
@@ -42,13 +43,14 @@ pub enum AppEvent {
     MouseWheel(MouseDelta),
     MouseInput((ElementState, MouseButton)),
     TouchInput(Touch),
-    KeyboardInput(KeyEvent),
+    KeyboardInput((KeyEvent, ModifiersState)),
 }
 
 pub struct App {
     window: Option<Window>,
     sender: Sender<AppEvent>,
     receiver: Receiver<AppEvent>,
+    modifiers_state: ModifiersState,
 }
 
 impl App {
@@ -59,6 +61,7 @@ impl App {
             window: None,
             sender,
             receiver,
+            modifiers_state: ModifiersState::empty(),
         }
     }
 
@@ -152,8 +155,13 @@ impl ApplicationHandler for App {
         event: winit::event::WindowEvent,
     ) {
         match event {
+            WindowEvent::ModifiersChanged(modifiers) => {
+                self.modifiers_state = modifiers.state();
+            }
             WindowEvent::KeyboardInput { event, .. } => {
-                self.sender.send(AppEvent::KeyboardInput(event)).ok();
+                self.sender
+                    .send(AppEvent::KeyboardInput((event, self.modifiers_state)))
+                    .ok();
             }
             WindowEvent::CursorMoved { position, .. } => {
                 self.sender.send(AppEvent::MouseMoved(position.into())).ok();

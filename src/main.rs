@@ -129,8 +129,8 @@ fn main() -> ExitCode {
             AppEvent::TouchInput(touch) => {
                 webview.touch_event(touch);
             }
-            AppEvent::KeyboardInput(key_event) => {
-                webview.keyboard_input_event(key_event);
+            AppEvent::KeyboardInput((key_event, modifiers)) => {
+                webview.keyboard_input_event(key_event, modifiers);
             }
         });
 

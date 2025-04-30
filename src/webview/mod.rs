@@ -16,14 +16,14 @@ use cef::{
     execute_process, initialize,
 };
 use cef_dll_sys::{
-    cef_key_event_type_t, cef_log_severity_t, cef_mouse_button_type_t, cef_paint_element_type_t,
-    cef_pointer_type_t, cef_touch_event_type_t,
+    cef_event_flags_t, cef_key_event_type_t, cef_log_severity_t, cef_mouse_button_type_t,
+    cef_paint_element_type_t, cef_pointer_type_t, cef_touch_event_type_t,
 };
 use constants::IPC_SENDER;
 use once_cell::sync::OnceCell;
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, Touch, TouchPhase},
-    keyboard::{Key, PhysicalKey},
+    keyboard::{Key, ModifiersState, PhysicalKey},
 };
 
 use crate::shared::types::{Cursor, MouseDelta, MousePosition};
@@ -260,7 +260,7 @@ impl WebView {
         }
     }
 
-    pub fn keyboard_input_event(&self, key_event: KeyEvent) {
+    pub fn keyboard_input_event(&self, key_event: KeyEvent, modifiers: ModifiersState) {
         if let Some(host) = self.browser_host() {
             if let PhysicalKey::Code(code) = key_event.physical_key {
                 if let (Ok(WindowsKeyCode(windows_key_code)), Ok(NativeKeyCode(native_key_code))) =
@@ -271,10 +271,17 @@ impl WebView {
                         false => cef_key_event_type_t::KEYEVENT_KEYUP.into(),
                     };
 
+                    let modifiers = if modifiers.control_key() {
+                        cef_event_flags_t::EVENTFLAG_CONTROL_DOWN as u32
+                    } else {
+                        cef_event_flags_t::EVENTFLAG_NONE as u32
+                    };
+
                     let event = cef::KeyEvent {
                         type_: event_type,
                         windows_key_code,
                         native_key_code,
+                        modifiers,
                         ..Default::default()
                     };
 
