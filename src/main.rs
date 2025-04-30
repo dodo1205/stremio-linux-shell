@@ -17,20 +17,13 @@ use ipc::{IpcEvent, IpcEventMpv};
 use player::{Player, PlayerEvent};
 use server::Server;
 use shared::{drop_gl, drop_renderer, with_gl, with_renderer_read, with_renderer_write};
-use std::{
-    fs, num::NonZeroU32, path::Path, process::ExitCode, rc::Rc, sync::mpsc::channel, thread,
-    time::Duration,
-};
+use std::{fs, num::NonZeroU32, path::Path, process::ExitCode, rc::Rc, time::Duration};
 use tracing::warn;
 use webview::{WebView, WebViewEvent};
 use winit::{
     event_loop::{ControlFlow, EventLoop},
     platform::pump_events::{EventLoopExtPumpEvents, PumpStatus},
 };
-
-enum BridgeEvent {
-    Draw,
-}
 
 #[derive(Parser, Debug)]
 #[command(version, ignore_errors(true))]
@@ -70,13 +63,17 @@ fn main() -> ExitCode {
     let mut app = App::new();
     let mut player = Player::new();
 
-    let (bridge_tx, bridge_rx) = channel::<BridgeEvent>();
-
     let mut event_loop = EventLoop::new().expect("Failed to create event loop");
     event_loop.set_control_flow(ControlFlow::Poll);
 
+    let mut needs_repaint = false;
+
     loop {
-        let timeout = Some(Duration::ZERO);
+        let timeout = match needs_repaint {
+            true => Some(Duration::ZERO),
+            false => None,
+        };
+
         let status = event_loop.pump_app_events(timeout, &mut app);
 
         if let PumpStatus::Exit(exit_code) = status {
@@ -152,7 +149,7 @@ fn main() -> ExitCode {
                 }
             }
             WebViewEvent::Paint => {
-                bridge_tx.send(BridgeEvent::Draw).ok();
+                needs_repaint = true;
             }
             WebViewEvent::Cursor(cursor) => {
                 app.set_cursor(cursor);
@@ -186,7 +183,7 @@ fn main() -> ExitCode {
 
         player.events(|event| match event {
             PlayerEvent::Update => {
-                bridge_tx.send(BridgeEvent::Draw).ok();
+                needs_repaint = true;
             }
             PlayerEvent::PropertyChange(property) => {
                 let message = ipc::create_response(IpcEvent::Mpv(IpcEventMpv::Change(property)));
@@ -194,30 +191,28 @@ fn main() -> ExitCode {
             }
         });
 
-        bridge_rx.try_iter().for_each(|event| match event {
-            BridgeEvent::Draw => {
-                with_gl(|surface, context| {
-                    let should_render = player.should_render();
+        if needs_repaint {
+            let should_render = player.should_render();
 
-                    with_renderer_read(|renderer| {
-                        if should_render {
-                            player.render(renderer.fbo, renderer.width, renderer.height);
-                        }
-
-                        renderer.draw();
-                    });
-
-                    surface
-                        .swap_buffers(context)
-                        .expect("Failed to swap buffers");
-
+            with_gl(|surface, context| {
+                with_renderer_read(|renderer| {
                     if should_render {
-                        player.report_swap();
+                        player.render(renderer.fbo, renderer.width, renderer.height);
                     }
-                });
-            }
-        });
 
-        thread::sleep(Duration::from_millis(1));
+                    renderer.draw();
+                });
+
+                surface
+                    .swap_buffers(context)
+                    .expect("Failed to swap buffers");
+            });
+
+            if should_render {
+                player.report_swap();
+            }
+
+            needs_repaint = false;
+        }
     }
 }

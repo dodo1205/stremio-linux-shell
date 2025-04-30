@@ -138,7 +138,7 @@ impl WebView {
         }
     }
 
-    pub fn events<T: Fn(WebViewEvent)>(&self, handler: T) {
+    pub fn events<T: FnMut(WebViewEvent)>(&self, handler: T) {
         self.receiver.try_iter().for_each(handler);
     }
 

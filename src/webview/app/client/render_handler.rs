@@ -1,6 +1,6 @@
 use crate::{
     WebViewEvent, cef_impl,
-    shared::{with_gl, with_renderer_read, with_renderer_write},
+    shared::{with_gl, with_renderer_read},
     webview::SENDER,
 };
 
@@ -33,7 +33,7 @@ cef_impl!(
             height: ::std::os::raw::c_int,
         ) {
             with_gl(|_, _| {
-                with_renderer_write(|renderer| {
+                with_renderer_read(|renderer| {
                     if let Some(dirty) = dirty_rects {
                         renderer.paint(dirty.x, dirty.y, dirty.width, dirty.height, buffer, width);
                     } else {

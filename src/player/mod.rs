@@ -230,7 +230,7 @@ impl Player {
         }
     }
 
-    pub fn events<T: Fn(PlayerEvent)>(&mut self, handler: T) {
+    pub fn events<T: FnMut(PlayerEvent)>(&mut self, handler: T) {
         self.receiver.try_iter().for_each(handler);
 
         let sender = self.sender.clone();
