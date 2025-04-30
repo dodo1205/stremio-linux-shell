@@ -9,7 +9,10 @@ mod webview;
 use app::{App, AppEvent};
 use clap::Parser;
 use constants::{DATA_PATH, STARTUP_URL, URI_SCHEME, WINDOW_SIZE};
-use glutin::{display::GetGlDisplay, surface::GlSurface};
+use glutin::{
+    display::GetGlDisplay,
+    surface::{GlSurface, SwapInterval},
+};
 use ipc::{IpcEvent, IpcEventMpv};
 use player::{Player, PlayerEvent};
 use server::Server;
@@ -18,6 +21,7 @@ use std::{
     fs, num::NonZeroU32, path::Path, process::ExitCode, rc::Rc, sync::mpsc::channel, thread,
     time::Duration,
 };
+use tracing::warn;
 use webview::{WebView, WebViewEvent};
 use winit::{
     event_loop::{ControlFlow, EventLoop},
@@ -88,7 +92,12 @@ fn main() -> ExitCode {
             AppEvent::Ready => {
                 let refresh_rate = app.get_refresh_rate();
 
-                with_gl(|surface, _| {
+                with_gl(|surface, context| {
+                    surface
+                        .set_swap_interval(context, SwapInterval::Wait(NonZeroU32::new(1).unwrap()))
+                        .map_err(|e| warn!("Failed to enable VSync: {e}"))
+                        .ok();
+
                     shared::create_renderer(WINDOW_SIZE, refresh_rate);
                     player.setup(Rc::new(surface.display()));
                 });
