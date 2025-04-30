@@ -31,7 +31,9 @@
         "env": {
             "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/lib64/pkgconfig",
             "CEF_PATH": "/app/share/stremio"
-        }
+        },
+        "strip": true,
+        "no-debuginfo": true
     },
     "modules": [
         {
