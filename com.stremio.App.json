@@ -11,6 +11,16 @@
             "version": "24.08",
             "directory": "lib/ffmpeg",
             "add-ld-path": "."
+        },
+        "org.freedesktop.Platform.openh264": {
+            "version": "2.5.1",
+            "directory": "lib/openh264",
+            "add-ld-path": "."
+        },
+        "org.freedesktop.Platform.VAAPI.Intel": {
+            "version": "24.08",
+            "directory": "lib/intel-vaapi-driver",
+            "add-ld-path": "."
         }
     },
     "command": "stremio",
