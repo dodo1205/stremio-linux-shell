@@ -12,6 +12,7 @@ pub const BOOL_PROPERTIES: &[&str] = &[
     "pause",
     "mute",
     "buffering",
+    "seeking",
     "osc",
     "input-default-bindings",
     "input-vo-keyboard",
