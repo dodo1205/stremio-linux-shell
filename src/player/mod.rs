@@ -260,9 +260,9 @@ impl Player {
         };
 
         if let Some(format) = format {
-            self.event_context
-                .observe_property(&name, format, 0)
-                .expect("Failed to observe property");
+            if let Err(e) = self.event_context.observe_property(&name, format, 0) {
+                error!("Failed to observe property {name}: {e}");
+            }
         }
     }
 
