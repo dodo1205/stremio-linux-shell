@@ -18,6 +18,7 @@ use libmpv2::{
 };
 use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
 use serde_json::{Number, Value};
+use tracing::error;
 
 pub type GLContext = Rc<Display>;
 
@@ -269,26 +270,26 @@ impl Player {
         match property.name() {
             name if FLOAT_PROPERTIES.contains(&name) => {
                 if let Ok(MpvPropertyValue::Float(value)) = property.value() {
-                    self.mpv
-                        .set_property(name, value)
-                        .expect("Failed to set property");
+                    if let Err(e) = self.mpv.set_property(name, value) {
+                        error!("Failed to set property {name}: {e}");
+                    }
                 }
             }
             name if BOOL_PROPERTIES.contains(&name) => {
                 if let Ok(MpvPropertyValue::Bool(value)) = property.value() {
-                    self.mpv
-                        .set_property(name, value)
-                        .expect("Failed to set property");
+                    if let Err(e) = self.mpv.set_property(name, value) {
+                        error!("Failed to set property {name}: {e}");
+                    }
                 }
             }
             name if STRING_PROPERTIES.contains(&name) => {
                 if let Ok(MpvPropertyValue::String(value)) = property.value() {
-                    self.mpv
-                        .set_property(name, value)
-                        .expect("Failed to set property");
+                    if let Err(e) = self.mpv.set_property(name, value) {
+                        error!("Failed to set property {name}: {e}");
+                    }
                 }
             }
-            name => eprintln!("Failed to set property: Unsupported {name}"),
+            name => error!("Failed to set property {name}: Unsupported"),
         };
     }
 }
