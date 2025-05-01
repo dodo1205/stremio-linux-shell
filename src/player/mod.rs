@@ -246,9 +246,9 @@ impl Player {
 
     pub fn command(&self, name: String, args: Vec<String>) {
         let args = args.iter().map(String::as_ref).collect_vec();
-        self.mpv
-            .command(&name, &args)
-            .expect("Failed to send command to mpv");
+        if let Err(e) = self.mpv.command(&name, &args) {
+            error!("Failed to use command {name}: {e}");
+        }
     }
 
     pub fn observe_property(&self, name: String) {
