@@ -1,5 +1,3 @@
-pub const INT_PROPERTIES: &[&str] = &["sid", "aid"];
-
 pub const FLOAT_PROPERTIES: &[&str] = &[
     "time-pos",
     "duration",
@@ -29,4 +27,6 @@ pub const STRING_PROPERTIES: &[&str] = &[
     "sub-color",
     "sub-back-color",
     "sub-border-color",
+    "sid",
+    "aid",
 ];

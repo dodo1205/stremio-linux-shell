@@ -7,7 +7,7 @@ use std::{
     sync::mpsc::{Receiver, Sender, channel},
 };
 
-use constants::{BOOL_PROPERTIES, FLOAT_PROPERTIES, INT_PROPERTIES, STRING_PROPERTIES};
+use constants::{BOOL_PROPERTIES, FLOAT_PROPERTIES, STRING_PROPERTIES};
 use glutin::{display::Display, prelude::GlDisplay};
 use itertools::Itertools;
 use libmpv2::{
@@ -22,7 +22,6 @@ pub type GLContext = Rc<Display>;
 
 #[derive(Debug)]
 pub enum MpvPropertyValue {
-    Int(i64),
     Float(f64),
     Bool(bool),
     String(String),
@@ -34,7 +33,6 @@ impl Serialize for MpvPropertyValue {
         S: serde::Serializer,
     {
         match self {
-            MpvPropertyValue::Int(value) => serializer.serialize_i64(*value),
             MpvPropertyValue::Float(value) => serializer.serialize_f64(*value),
             MpvPropertyValue::Bool(value) => serializer.serialize_bool(*value),
             MpvPropertyValue::String(value) => {
@@ -58,12 +56,6 @@ impl MpvProperty {
 
     pub fn value(&self) -> Result<MpvPropertyValue, &'static str> {
         if let Some(value) = self.1.clone() {
-            if INT_PROPERTIES.contains(&self.name()) {
-                return serde_json::from_value::<i64>(value)
-                    .map(MpvPropertyValue::Int)
-                    .map_err(|_| "Failed to get i64 from Value");
-            }
-
             if FLOAT_PROPERTIES.contains(&self.name()) {
                 return serde_json::from_value::<f64>(value)
                     .map(MpvPropertyValue::Float)
@@ -116,10 +108,6 @@ impl<'a> TryFrom<Event<'a>> for PlayerEvent {
         match value {
             Event::PropertyChange { name, change, .. } => {
                 let property = match change {
-                    PropertyData::Int64(value) => MpvProperty(
-                        name.to_owned(),
-                        Some(Value::Number(Number::from_i128(value.into()).unwrap())),
-                    ),
                     PropertyData::Double(value) => MpvProperty(
                         name.to_owned(),
                         Some(Value::Number(Number::from_f64(value).unwrap())),
@@ -257,7 +245,6 @@ impl Player {
 
     pub fn observe_property(&self, name: String) {
         let format = match name.as_str() {
-            name if INT_PROPERTIES.contains(&name) => Some(Format::Int64),
             name if FLOAT_PROPERTIES.contains(&name) => Some(Format::Double),
             name if BOOL_PROPERTIES.contains(&name) => Some(Format::Flag),
             name if STRING_PROPERTIES.contains(&name) => Some(Format::String),
@@ -273,13 +260,6 @@ impl Player {
 
     pub fn set_property(&self, property: MpvProperty) {
         match property.name() {
-            name if INT_PROPERTIES.contains(&name) => {
-                if let Ok(MpvPropertyValue::Int(value)) = property.value() {
-                    self.mpv
-                        .set_property(name, value)
-                        .expect("Failed to set property");
-                }
-            }
             name if FLOAT_PROPERTIES.contains(&name) => {
                 if let Ok(MpvPropertyValue::Float(value)) = property.value() {
                     self.mpv
