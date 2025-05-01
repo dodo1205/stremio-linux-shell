@@ -34,7 +34,7 @@ cef_impl!(
                 .expect("Failed to create a value for function");
 
             if let Some(context) = context {
-                if let Some(global) = context.get_global() {
+                if let Some(global) = context.global() {
                     global.set_value_bykey(
                         Some(&name),
                         Some(&mut value),

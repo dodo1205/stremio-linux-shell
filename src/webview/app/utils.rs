@@ -14,12 +14,12 @@ pub fn send_process_message(
         process_message_create(Some(&name)).expect("Failed to create process message");
 
     if let Some(arg) = arg {
-        let arguments = message.get_argument_list().unwrap();
+        let arguments = message.argument_list().unwrap();
         arguments.set_string(0, Some(arg));
     }
 
     if let Some(browser) = browser {
-        if let Some(main_frame) = browser.get_main_frame() {
+        if let Some(main_frame) = browser.main_frame() {
             main_frame
                 .send_process_message(cef_process_id_t::PID_BROWSER.into(), Some(&mut message));
         }

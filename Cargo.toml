@@ -11,8 +11,8 @@ offline-build = []
 
 [dependencies]
 anyhow = "1.0.98"
-cef = { version = "135.0.21", git = "https://github.com/Stremio/cef-rs" }
-cef-dll-sys = { version = "135.0.21", git = "https://github.com/Stremio/cef-rs" }
+cef = "135.0.22"
+cef-dll-sys = "135.0.22"
 clap = { version = "4.5.37", features = ["derive"] }
 gl = "0.14.0"
 glutin = "0.32.2"

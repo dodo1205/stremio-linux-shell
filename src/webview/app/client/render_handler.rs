@@ -9,7 +9,7 @@ cef_impl!(
     name = RenderHandler,
     sys_type = cef_dll_sys::cef_render_handler_t,
     {
-        fn get_view_rect(&self, _browser: Option<&mut impl ImplBrowser>, rect: Option<&mut Rect>) {
+        fn view_rect(&self, _browser: Option<&mut impl ImplBrowser>, rect: Option<&mut Rect>) {
             with_renderer_read(|renderer| {
                 if let Some(rect) = rect {
                     *rect = Rect {

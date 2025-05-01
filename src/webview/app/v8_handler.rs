@@ -43,7 +43,7 @@ fn handler_data(arguments: Option<&[Option<impl ImplV8Value>]>) -> Option<CefStr
         arguments.first().and_then(|value| {
             value
                 .as_ref()
-                .map(|value| value.get_string_value())
+                .map(|value| value.string_value())
                 .map(|value| CefString::from(&value))
         })
     })
@@ -51,7 +51,7 @@ fn handler_data(arguments: Option<&[Option<impl ImplV8Value>]>) -> Option<CefStr
 
 fn send_ipc_message(data: CefStringUtf16) {
     if let Some(context) = v8_context_get_current_context() {
-        if let Some(mut browser) = context.get_browser() {
+        if let Some(mut browser) = context.browser() {
             utils::send_process_message(Some(&mut browser), IPC_MESSAGE, Some(&data));
         }
     }

@@ -82,7 +82,7 @@ impl WebView {
 
     fn browser_host(&self) -> Option<BrowserHost> {
         if let Some(browser) = BROWSER.get() {
-            return browser.get_host();
+            return browser.host();
         }
 
         None
@@ -90,7 +90,7 @@ impl WebView {
 
     fn main_frame(&self) -> Option<Frame> {
         if let Some(browser) = BROWSER.get() {
-            return browser.get_main_frame();
+            return browser.main_frame();
         }
 
         None
@@ -225,7 +225,7 @@ impl WebView {
             };
 
             if let Some(button_type) = button_type {
-                if let Some(host) = browser.get_host() {
+                if let Some(host) = browser.host() {
                     let event = self.mouse_position.into();
 
                     host.send_mouse_click_event(

@@ -26,11 +26,11 @@ cef_impl!(
             }
         }
 
-        fn get_browser_process_handler(&self) -> Option<BrowserProcessHandler> {
+        fn browser_process_handler(&self) -> Option<BrowserProcessHandler> {
             Some(WebViewBrowserProcessHandler::new())
         }
 
-        fn get_render_process_handler(&self) -> Option<RenderProcessHandler> {
+        fn render_process_handler(&self) -> Option<RenderProcessHandler> {
             Some(WebViewRenderProcessHandler::new())
         }
     }
