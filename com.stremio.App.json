@@ -140,6 +140,7 @@
                         "install -D Release/libcef.so -t /app/share/stremio/",
                         "install -D Release/libEGL.so -t /app/share/stremio/",
                         "install -D Release/libGLESv2.so -t /app/share/stremio/",
+                        "install -D Release/libvk_swiftshader.so -t /app/share/stremio/",
                         "install -D Release/v8_context_snapshot.bin -t /app/share/stremio/",
                         "install -D Resources/*.pak -t /app/share/stremio/",
                         "install -D Resources/icudtl.dat -t /app/share/stremio/",

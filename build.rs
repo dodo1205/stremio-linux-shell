@@ -20,6 +20,7 @@ const CEF_ARCHIVE_FILES: &[[&str; 2]] = &[
     ["*/Release/libcef.so", ""],
     ["*/Release/libEGL.so", ""],
     ["*/Release/libGLESv2.so", ""],
+    ["*/Release/libvk_swiftshader.so", ""],
     ["*/Release/v8_context_snapshot.bin", ""],
 ];
 
