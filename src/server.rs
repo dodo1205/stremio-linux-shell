@@ -1,11 +1,14 @@
 use std::{
     fs,
+    io::{BufRead, BufReader},
     path::{Path, PathBuf},
-    process::{Child, Command},
+    process::{self, Child, Command},
+    thread,
 };
 
 use anyhow::{Context, Ok};
 use serde::Deserialize;
+use tracing::debug;
 use url::Url;
 
 use crate::constants::{SERVER_DOWNLOAD_ENDPOINT, SERVER_UPDATER_ENDPOINT};
@@ -62,10 +65,22 @@ impl Server {
     }
 
     pub fn start(&mut self) -> anyhow::Result<()> {
-        let child = Command::new("node")
+        let mut child = Command::new("node")
             .arg(self.file_path.as_os_str())
+            .stdout(process::Stdio::piped())
             .spawn()
             .context("Failed to start server")?;
+
+        if let Some(stdout) = child.stdout.take() {
+            let reader = BufReader::new(stdout);
+            let mut lines = reader.lines();
+
+            thread::spawn(move || {
+                while let Some(Result::Ok(line)) = lines.next() {
+                    debug!(target: "server", "{}", line);
+                }
+            });
+        }
 
         self.process = Some(child);
 
