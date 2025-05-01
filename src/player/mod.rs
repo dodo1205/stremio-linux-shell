@@ -1,6 +1,7 @@
 mod constants;
 
 use std::{
+    env,
     ffi::CString,
     os::raw::c_void,
     rc::Rc,
@@ -138,11 +139,17 @@ pub struct Player {
 
 impl Player {
     pub fn new() -> Self {
+        let log = env::var("RUST_LOG");
+        let msg_level = match log {
+            Ok(scope) => &format!("all={}", scope.as_str()),
+            _ => "all=no",
+        };
+
         let mpv = Mpv::with_initializer(|init| {
             init.set_property("vo", "libmpv")?;
             init.set_property("video-timing-offset", "0")?;
-            // init.set_property("terminal", "yes")?;
-            // init.set_property("msg-level", "all=v")?;
+            init.set_property("terminal", "yes")?;
+            init.set_property("msg-level", msg_level)?;
             Ok(())
         })
         .expect("Failed to create mpv");

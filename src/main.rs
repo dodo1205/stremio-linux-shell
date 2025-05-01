@@ -43,6 +43,8 @@ struct Args {
 }
 
 fn main() -> ExitCode {
+    tracing_subscriber::fmt::init();
+
     let args = Args::parse();
 
     let expanded_data_path = shellexpand::tilde(&DATA_PATH).to_string();
