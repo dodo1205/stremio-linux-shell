@@ -12,11 +12,6 @@
             "directory": "lib/ffmpeg",
             "add-ld-path": "."
         },
-        "org.freedesktop.Platform.openh264": {
-            "version": "2.5.1",
-            "directory": "lib/openh264",
-            "add-ld-path": "."
-        },
         "org.freedesktop.Platform.VAAPI.Intel": {
             "version": "24.08",
             "directory": "lib/intel-vaapi-driver",
@@ -66,7 +61,6 @@
                 "install -Dm644 data/com.stremio.App.desktop -t /app/share/applications/",
                 "install -Dm644 data/com.stremio.App.metainfo.xml -t /app/share/metainfo/",
                 "mkdir -p /app/lib/ffmpeg",
-                "mkdir -p /app/lib/openh264",
                 "mkdir -p /app/lib/intel-vaapi-driver"
             ],
             "sources": [
