@@ -138,8 +138,7 @@ fn unpack_archive(path: &Path, out: &Path) -> Result<()> {
 
         for entry in archive.entries()? {
             let mut entry = entry?;
-
-            let file_path = entry.header().path()?.into_owned();
+            let file_path = entry.path()?.into_owned();
 
             if let Some(file_name) = file_path.file_name() {
                 for archive_file in CEF_ARCHIVE_FILES {
