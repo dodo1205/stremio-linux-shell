@@ -31,7 +31,7 @@
         "--share=ipc",
         "--share=network",
         "--device=dri",
-        "--filesystem=xdg-data/stremio",
+        "--filesystem=xdg-data/stremio:rw",
         "--env=LD_LIBRARY_PATH=/app/lib/:/app/lib64/:/app/share/stremio",
         "--system-talk-name=org.freedesktop.systemd1",
         "--system-talk-name=org.freedesktop.UPower"
