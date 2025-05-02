@@ -21,6 +21,7 @@ use cef_dll_sys::{
 };
 use constants::IPC_SENDER;
 use once_cell::sync::OnceCell;
+use url::Url;
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, Touch, TouchPhase},
     keyboard::{Key, ModifiersState, PhysicalKey},
@@ -36,6 +37,7 @@ pub enum WebViewEvent {
     Loaded,
     Paint,
     Cursor(Cursor),
+    Open(Url),
     Ipc(String),
 }
 

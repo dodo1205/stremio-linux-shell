@@ -156,6 +156,9 @@ fn main() -> ExitCode {
             WebViewEvent::Cursor(cursor) => {
                 app.set_cursor(cursor);
             }
+            WebViewEvent::Open(url) => {
+                open::that(url.as_str()).ok();
+            }
             WebViewEvent::Ipc(data) => ipc::parse_request(data, |event| match event {
                 IpcEvent::Init(id) => {
                     let message = ipc::create_response(IpcEvent::Init(id));
