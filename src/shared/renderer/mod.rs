@@ -3,7 +3,6 @@ mod utils;
 use std::ptr;
 
 use gl::types::{GLint, GLuint};
-use utils::{compile_shader, create_fbo, create_geometry, create_pbo, create_texture};
 
 const FRAGMENT_SRC: &str = include_str!("shader.frag");
 const VERTEX_SRC: &str = include_str!("shader.vert");
@@ -28,8 +27,8 @@ pub struct Renderer {
 impl Renderer {
     pub fn new((width, height): (i32, i32), refresh_rate: u32) -> Self {
         unsafe {
-            let vertex_shader = compile_shader(gl::VERTEX_SHADER, VERTEX_SRC);
-            let fragment_shader = compile_shader(gl::FRAGMENT_SHADER, FRAGMENT_SRC);
+            let vertex_shader = utils::compile_shader(gl::VERTEX_SHADER, VERTEX_SRC);
+            let fragment_shader = utils::compile_shader(gl::FRAGMENT_SHADER, FRAGMENT_SRC);
             let program = gl::CreateProgram();
 
             gl::AttachShader(program, vertex_shader);
@@ -41,16 +40,16 @@ impl Renderer {
             gl::DeleteShader(vertex_shader);
             gl::DeleteShader(fragment_shader);
 
-            let front_texture = create_texture(width, height);
+            let front_texture = utils::create_texture(width, height);
             let front_uniform = gl::GetUniformLocation(program, c"front_texture".as_ptr() as _);
 
-            let back_texture = create_texture(width, height);
+            let back_texture = utils::create_texture(width, height);
             let back_uniform = gl::GetUniformLocation(program, c"back_texture".as_ptr() as _);
 
-            let (vao, vbo) = create_geometry(program);
-            let fbo = create_fbo(back_texture);
+            let (vao, vbo) = utils::create_geometry(program);
+            let fbo = utils::create_fbo(back_texture);
 
-            let pbo = create_pbo(width, height);
+            let pbo = utils::create_pbo(width, height);
 
             let status = gl::CheckFramebufferStatus(gl::FRAMEBUFFER);
             if status != gl::FRAMEBUFFER_COMPLETE {
