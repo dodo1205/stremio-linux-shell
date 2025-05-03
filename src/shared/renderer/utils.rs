@@ -164,7 +164,7 @@ pub fn resize_pbo(pbo: GLuint, width: i32, height: i32) {
                 gl::PIXEL_UNPACK_BUFFER,
                 new_size as GLsizeiptr,
                 ptr::null(),
-                gl::STREAM_READ,
+                gl::STREAM_DRAW,
             );
         }
 
