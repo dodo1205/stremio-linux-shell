@@ -1,12 +1,10 @@
+mod constants;
 mod utils;
 
 use std::ptr;
 
+use constants::{BYTES_PER_PIXEL, FRAGMENT_SRC, VERTEX_SRC};
 use gl::types::{GLint, GLuint};
-
-const FRAGMENT_SRC: &str = include_str!("shader.frag");
-const VERTEX_SRC: &str = include_str!("shader.vert");
-const BYTES_PER_PIXEL: usize = 4;
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -100,19 +98,19 @@ impl Renderer {
         unsafe {
             gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, self.pbo);
 
-            let row_bytes = width as usize * BYTES_PER_PIXEL;
-            let stride = full_width as usize * BYTES_PER_PIXEL;
+            let row_bytes = width * BYTES_PER_PIXEL;
+            let stride = full_width * BYTES_PER_PIXEL;
 
             let ptr = gl::MapBuffer(gl::PIXEL_UNPACK_BUFFER, gl::WRITE_ONLY) as *mut u8;
             if !ptr.is_null() {
-                for row in 0..height as usize {
-                    let src_offset = (y as usize + row) * stride + (x as usize * BYTES_PER_PIXEL);
+                for row in 0..height {
+                    let src_offset = (y + row) * stride + (x * BYTES_PER_PIXEL);
                     let dst_offset = row * row_bytes;
 
-                    let src_ptr = buffer.add(src_offset);
-                    let dst_ptr = ptr.add(dst_offset);
+                    let src_ptr = buffer.add(src_offset as usize);
+                    let dst_ptr = ptr.add(dst_offset as usize);
 
-                    ptr::copy_nonoverlapping(src_ptr, dst_ptr, row_bytes);
+                    ptr::copy_nonoverlapping(src_ptr, dst_ptr, row_bytes as usize);
                 }
 
                 gl::UnmapBuffer(gl::PIXEL_UNPACK_BUFFER);

@@ -2,6 +2,8 @@ use std::{mem, ptr};
 
 use gl::types::{GLenum, GLfloat, GLint, GLsizei, GLsizeiptr, GLuint};
 
+use super::constants::BYTES_PER_PIXEL;
+
 pub fn create_fbo(texture: GLuint) -> GLuint {
     unsafe {
         let mut fbo = 0;
@@ -29,7 +31,7 @@ pub fn create_pbo(width: i32, height: i32) -> GLuint {
         gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, pbo);
         gl::BufferData(
             gl::PIXEL_UNPACK_BUFFER,
-            (width * height * 4) as GLsizeiptr,
+            (width * height * BYTES_PER_PIXEL) as GLsizeiptr,
             ptr::null(),
             gl::STREAM_DRAW,
         );
@@ -156,7 +158,7 @@ pub fn resize_pbo(pbo: GLuint, width: i32, height: i32) {
         let mut pbo_size = 0;
         gl::GetBufferParameteriv(gl::PIXEL_UNPACK_BUFFER, gl::BUFFER_SIZE, &mut pbo_size);
 
-        let new_size = width * height * 4;
+        let new_size = width * height * BYTES_PER_PIXEL;
         if new_size > pbo_size {
             gl::BufferData(
                 gl::PIXEL_UNPACK_BUFFER,
