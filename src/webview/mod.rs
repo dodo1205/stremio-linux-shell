@@ -194,7 +194,7 @@ impl WebView {
         }
     }
 
-    pub fn mouse_moved_event(&mut self, position: MousePosition, hovered: bool) {
+    pub fn mouse_moved(&mut self, position: MousePosition, hovered: bool) {
         self.mouse_position = position;
 
         if let Some(host) = self.browser_host() {
@@ -205,14 +205,14 @@ impl WebView {
         }
     }
 
-    pub fn mouse_wheel_event(&self, MouseDelta(delta_x, delta_y): MouseDelta) {
+    pub fn mouse_wheel(&self, MouseDelta(delta_x, delta_y): MouseDelta) {
         if let Some(host) = self.browser_host() {
             let event = self.mouse_position.into();
             host.send_mouse_wheel_event(Some(&event), delta_x, delta_y);
         }
     }
 
-    pub fn mouse_input_event(&self, state: ElementState, button: MouseButton) {
+    pub fn mouse_input(&self, state: ElementState, button: MouseButton) {
         if let Some(browser) = BROWSER.get() {
             let mouse_up = match state {
                 ElementState::Pressed => false,
@@ -249,7 +249,7 @@ impl WebView {
         }
     }
 
-    pub fn touch_event(&self, touch: Touch) {
+    pub fn touch_input(&self, touch: Touch) {
         if let Some(host) = self.browser_host() {
             let event_type = match touch.phase {
                 TouchPhase::Started => cef_touch_event_type_t::CEF_TET_PRESSED,
@@ -270,7 +270,7 @@ impl WebView {
         }
     }
 
-    pub fn keyboard_input_event(&self, key_event: KeyEvent, modifiers: ModifiersState) {
+    pub fn keyboard_input(&self, key_event: KeyEvent, modifiers: ModifiersState) {
         if let Some(host) = self.browser_host() {
             if let PhysicalKey::Code(code) = key_event.physical_key {
                 if let (Ok(WindowsKeyCode(windows_key_code)), Ok(NativeKeyCode(native_key_code))) =

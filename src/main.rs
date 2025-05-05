@@ -123,19 +123,19 @@ fn main() -> ExitCode {
                 webview.focused(state);
             }
             AppEvent::MouseMoved((position, hovered)) => {
-                webview.mouse_moved_event(position, hovered);
+                webview.mouse_moved(position, hovered);
             }
             AppEvent::MouseWheel(delta) => {
-                webview.mouse_wheel_event(delta);
+                webview.mouse_wheel(delta);
             }
             AppEvent::MouseInput((state, button)) => {
-                webview.mouse_input_event(state, button);
+                webview.mouse_input(state, button);
             }
             AppEvent::TouchInput(touch) => {
-                webview.touch_event(touch);
+                webview.touch_input(touch);
             }
             AppEvent::KeyboardInput((key_event, modifiers)) => {
-                webview.keyboard_input_event(key_event, modifiers);
+                webview.keyboard_input(key_event, modifiers);
             }
         });
 
