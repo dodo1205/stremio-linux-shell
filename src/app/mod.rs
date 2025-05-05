@@ -40,7 +40,7 @@ pub enum AppEvent {
     Ready,
     Resized(WindowSize),
     Focused(bool),
-    MouseMoved(MousePosition),
+    MouseMoved((MousePosition, bool)),
     MouseWheel(MouseDelta),
     MouseInput((ElementState, MouseButton)),
     TouchInput(Touch),
@@ -52,6 +52,7 @@ pub struct App {
     sender: Sender<AppEvent>,
     receiver: Receiver<AppEvent>,
     modifiers_state: ModifiersState,
+    hovered: bool,
 }
 
 impl App {
@@ -63,6 +64,7 @@ impl App {
             sender,
             receiver,
             modifiers_state: ModifiersState::empty(),
+            hovered: false,
         }
     }
 
@@ -165,7 +167,9 @@ impl ApplicationHandler for App {
                     .ok();
             }
             WindowEvent::CursorMoved { position, .. } => {
-                self.sender.send(AppEvent::MouseMoved(position.into())).ok();
+                self.sender
+                    .send(AppEvent::MouseMoved((position.into(), self.hovered)))
+                    .ok();
             }
             WindowEvent::MouseWheel { delta, .. } => {
                 self.sender.send(AppEvent::MouseWheel(delta.into())).ok();
@@ -181,6 +185,12 @@ impl ApplicationHandler for App {
             }
             WindowEvent::Focused(state) => {
                 self.sender.send(AppEvent::Focused(state)).ok();
+            }
+            WindowEvent::CursorEntered { .. } => {
+                self.hovered = true;
+            }
+            WindowEvent::CursorLeft { .. } => {
+                self.hovered = false;
             }
             WindowEvent::CloseRequested => {
                 event_loop.exit();

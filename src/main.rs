@@ -122,8 +122,8 @@ fn main() -> ExitCode {
             AppEvent::Focused(state) => {
                 webview.focused(state);
             }
-            AppEvent::MouseMoved(position) => {
-                webview.mouse_moved_event(position);
+            AppEvent::MouseMoved((position, hovered)) => {
+                webview.mouse_moved_event(position, hovered);
             }
             AppEvent::MouseWheel(delta) => {
                 webview.mouse_wheel_event(delta);
