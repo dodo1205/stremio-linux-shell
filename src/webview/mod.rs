@@ -182,6 +182,12 @@ impl WebView {
         }
     }
 
+    pub fn focused(&mut self, state: bool) {
+        if let Some(host) = self.browser_host() {
+            host.set_focus(state.into());
+        }
+    }
+
     pub fn repaint(&self) {
         if let Some(host) = self.browser_host() {
             host.invalidate(cef_paint_element_type_t::PET_VIEW.into());

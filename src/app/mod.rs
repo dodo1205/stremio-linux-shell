@@ -39,6 +39,7 @@ const CONTEXT_API: ContextApi = ContextApi::OpenGl(Some(Version::new(3, 3)));
 pub enum AppEvent {
     Ready,
     Resized(WindowSize),
+    Focused(bool),
     MouseMoved(MousePosition),
     MouseWheel(MouseDelta),
     MouseInput((ElementState, MouseButton)),
@@ -177,6 +178,9 @@ impl ApplicationHandler for App {
             }
             WindowEvent::Resized(size) => {
                 self.sender.send(AppEvent::Resized(size.into())).ok();
+            }
+            WindowEvent::Focused(state) => {
+                self.sender.send(AppEvent::Focused(state)).ok();
             }
             WindowEvent::CloseRequested => {
                 event_loop.exit();

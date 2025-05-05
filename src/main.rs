@@ -119,6 +119,9 @@ fn main() -> ExitCode {
                     webview.repaint();
                 });
             }
+            AppEvent::Focused(state) => {
+                webview.focused(state);
+            }
             AppEvent::MouseMoved(position) => {
                 webview.mouse_moved_event(position);
             }
