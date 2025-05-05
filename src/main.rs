@@ -160,7 +160,7 @@ fn main() -> ExitCode {
                 app.set_cursor(cursor);
             }
             WebViewEvent::Open(url) => {
-                open::that(url.as_str()).ok();
+                futures::executor::block_on(app.open_url(url));
             }
             WebViewEvent::Ipc(data) => ipc::parse_request(data, |event| match event {
                 IpcEvent::Init(id) => {
