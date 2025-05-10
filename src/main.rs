@@ -115,8 +115,8 @@ fn main() -> ExitCode {
                         renderer.resize(size.0, size.1);
                     });
 
-                    webview.resized();
-                    webview.repaint();
+                    webview.update();
+                    needs_repaint = true;
                 });
             }
             AppEvent::Focused(state) => {
@@ -154,6 +154,10 @@ fn main() -> ExitCode {
                 }
             }
             WebViewEvent::Paint => {
+                needs_repaint = true;
+            }
+            WebViewEvent::Resized => {
+                webview.update();
                 needs_repaint = true;
             }
             WebViewEvent::Cursor(cursor) => {
@@ -200,25 +204,18 @@ fn main() -> ExitCode {
         });
 
         if needs_repaint {
-            let should_render = player.should_render();
-
             with_gl(|surface, context| {
                 with_renderer_read(|renderer| {
-                    if should_render {
-                        player.render(renderer.fbo, renderer.width, renderer.height);
-                    }
-
+                    player.render(renderer.fbo, renderer.width, renderer.height);
                     renderer.draw();
                 });
 
                 surface
                     .swap_buffers(context)
                     .expect("Failed to swap buffers");
-            });
 
-            if should_render {
                 player.report_swap();
-            }
+            });
 
             needs_repaint = false;
         }

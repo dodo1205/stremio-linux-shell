@@ -77,15 +77,14 @@ impl Renderer {
             self.height = height;
 
             gl::Viewport(0, 0, width, height);
-            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
 
-            utils::resize_pbo(self.pbo, width, height);
             utils::resize_texture(self.back_texture, width, height);
-            utils::resize_texture(self.front_texture, width, height);
         }
     }
 
+    // A Pixel Buffer Object (PBO) is used to upload the buffer directly to the GPU,
+    // offering better performance than direct texture uploads.
+    // This helps reduce the time the current GL context remains locked.
     pub fn paint(
         &self,
         x: i32,
@@ -95,6 +94,9 @@ impl Renderer {
         buffer: *const u8,
         full_width: i32,
     ) {
+        utils::resize_pbo(self.pbo, self.width, self.height);
+        utils::resize_texture(self.front_texture, self.width, self.height);
+
         unsafe {
             gl::BindBuffer(gl::PIXEL_UNPACK_BUFFER, self.pbo);
 

@@ -36,6 +36,7 @@ pub enum WebViewEvent {
     Ready,
     Loaded,
     Paint,
+    Resized,
     Cursor(Cursor),
     Open(Url),
     Ipc(String),
@@ -176,21 +177,19 @@ impl WebView {
         }
     }
 
-    pub fn resized(&mut self) {
+    /// Tells the webview to update its bounds and repaint.
+    pub fn update(&self) {
         if let Some(host) = self.browser_host() {
             host.was_resized();
+            // Invalidate the view to ensure the `view_rect` callback is triggered,
+            // since repeated calls to `was_resized` may fail to invoke it consistently.
+            host.invalidate(cef_paint_element_type_t::PET_VIEW.into());
         }
     }
 
     pub fn focused(&mut self, state: bool) {
         if let Some(host) = self.browser_host() {
             host.set_focus(state.into());
-        }
-    }
-
-    pub fn repaint(&self) {
-        if let Some(host) = self.browser_host() {
-            host.invalidate(cef_paint_element_type_t::PET_VIEW.into());
         }
     }
 

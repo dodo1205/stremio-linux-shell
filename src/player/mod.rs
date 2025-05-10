@@ -209,17 +209,6 @@ impl Player {
         }
     }
 
-    pub fn should_render(&self) -> bool {
-        if let Some(render_context) = self.render_context.as_ref() {
-            return match render_context.update() {
-                Ok(result) => result == 1,
-                Err(_) => false,
-            };
-        }
-
-        false
-    }
-
     pub fn report_swap(&self) {
         if let Some(render_context) = self.render_context.as_ref() {
             render_context.report_swap();

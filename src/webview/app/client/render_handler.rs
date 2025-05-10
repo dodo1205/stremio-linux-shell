@@ -22,6 +22,9 @@ cef_impl!(
             });
         }
 
+        // The `width` and `height` parameters may be outdated due to asynchronous updates from `on_paint` and `view_rect`.
+        // We compare them against the current renderer dimensions before painting.
+        // If they don't match, send a Resized event to ask for a repaint.
         fn on_paint(
             &self,
             _browser: Option<&mut impl ImplBrowser>,
@@ -34,17 +37,28 @@ cef_impl!(
         ) {
             with_gl(|_, _| {
                 with_renderer_read(|renderer| {
-                    if let Some(dirty) = dirty_rects {
-                        renderer.paint(dirty.x, dirty.y, dirty.width, dirty.height, buffer, width);
-                    } else {
-                        renderer.paint(0, 0, width, height, buffer, width);
+                    if renderer.width == width && renderer.height == height {
+                        if let Some(dirty) = dirty_rects {
+                            renderer.paint(
+                                dirty.x,
+                                dirty.y,
+                                dirty.width,
+                                dirty.height,
+                                buffer,
+                                width,
+                            );
+                        } else {
+                            renderer.paint(0, 0, width, height, buffer, width);
+                        }
+
+                        if let Some(sender) = SENDER.get() {
+                            sender.send(WebViewEvent::Paint).ok();
+                        }
+                    } else if let Some(sender) = SENDER.get() {
+                        sender.send(WebViewEvent::Resized).ok();
                     }
                 });
             });
-
-            if let Some(sender) = SENDER.get() {
-                sender.send(WebViewEvent::Paint).ok();
-            }
         }
     }
 );
