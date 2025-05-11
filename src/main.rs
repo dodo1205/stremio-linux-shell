@@ -8,7 +8,7 @@ mod webview;
 
 use app::{App, AppEvent};
 use clap::Parser;
-use constants::{DATA_PATH, STARTUP_URL, URI_SCHEME, WINDOW_SIZE};
+use constants::{DATA_DIR, STARTUP_URL, URI_SCHEME, WINDOW_SIZE};
 use glutin::{
     display::GetGlDisplay,
     surface::{GlSurface, SwapInterval},
@@ -17,7 +17,7 @@ use ipc::{IpcEvent, IpcEventMpv};
 use player::{Player, PlayerEvent};
 use server::Server;
 use shared::{drop_gl, drop_renderer, with_gl, with_renderer_read, with_renderer_write};
-use std::{fs, num::NonZeroU32, path::Path, process::ExitCode, rc::Rc, time::Duration};
+use std::{fs, num::NonZeroU32, process::ExitCode, rc::Rc, time::Duration};
 use tracing::warn;
 use webview::{WebView, WebViewEvent};
 use winit::{
@@ -47,16 +47,17 @@ fn main() -> ExitCode {
 
     let args = Args::parse();
 
-    let expanded_data_path = shellexpand::tilde(&DATA_PATH).to_string();
-    let data_path = Path::new(&expanded_data_path);
-    fs::create_dir_all(data_path).expect("Failed to create data directory");
+    let data_path = dirs::data_dir()
+        .expect("Failed to get data dir")
+        .join(DATA_DIR);
+    fs::create_dir_all(&data_path).expect("Failed to create data directory");
 
-    let mut webview = WebView::new(data_path);
+    let mut webview = WebView::new(&data_path);
     if webview.should_exit() {
         return ExitCode::SUCCESS;
     }
 
-    let mut server = Server::new(data_path);
+    let mut server = Server::new(&data_path);
     if !args.no_server {
         server.setup().expect("Failed to setup server");
         server.start().expect("Failed to start server");

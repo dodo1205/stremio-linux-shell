@@ -27,8 +27,8 @@ pub struct Server {
 
 impl Server {
     pub fn new(data_path: &Path) -> Self {
-        let file_path = Path::new(&data_path).join("server.js");
-        let version_path = Path::new(&data_path).join("server_version");
+        let file_path = Path::new(data_path).join("server.js");
+        let version_path = Path::new(data_path).join("server_version");
 
         Self {
             file_path,
