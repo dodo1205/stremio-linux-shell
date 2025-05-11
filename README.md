@@ -39,7 +39,8 @@ flatpak install -y \
     org.freedesktop.Sdk//24.08 \
     org.freedesktop.Platform//24.08 \
     org.freedesktop.Sdk.Extension.rust-stable//24.08 \
-    org.freedesktop.Platform.ffmpeg-full//24.08
+    org.freedesktop.Platform.ffmpeg-full//24.08 \
+    org.freedesktop.Platform.VAAPI.Intel//24.08
 python3 -m pip install toml aiohttp
 ```
 
