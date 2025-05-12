@@ -67,6 +67,7 @@ impl TryFrom<KeyCode> for WindowsKeyCode {
             KeyCode::KeyS => Ok(Self(83)),
             KeyCode::KeyV => Ok(Self(86)),
             KeyCode::KeyX => Ok(Self(88)),
+            KeyCode::F11 => Ok(Self(122)),
             _ => Err("Failed to convert KeyCode to WindowsKeyCode"),
         }
     }
@@ -110,6 +111,7 @@ impl TryFrom<KeyCode> for NativeKeyCode {
             KeyCode::KeyS => Ok(Self(39)),
             KeyCode::KeyV => Ok(Self(55)),
             KeyCode::KeyX => Ok(Self(53)),
+            KeyCode::F11 => Ok(Self(95)),
             _ => Err("Failed to convert KeyCode to NativeKeyCode"),
         }
     }
