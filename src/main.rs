@@ -69,10 +69,10 @@ fn main() -> ExitCode {
     let mut event_loop = EventLoop::new().expect("Failed to create event loop");
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut needs_repaint = false;
+    let mut needs_redraw = false;
 
     loop {
-        let timeout = match needs_repaint {
+        let timeout = match needs_redraw {
             true => Some(Duration::ZERO),
             false => None,
         };
@@ -86,6 +86,23 @@ fn main() -> ExitCode {
             drop_gl();
 
             break ExitCode::from(exit_code as u8);
+        }
+
+        if needs_redraw {
+            with_gl(|surface, context| {
+                with_renderer_read(|renderer| {
+                    player.render(renderer.fbo, renderer.width, renderer.height);
+                    renderer.draw();
+                });
+
+                surface
+                    .swap_buffers(context)
+                    .expect("Failed to swap buffers");
+
+                player.report_swap();
+            });
+
+            needs_redraw = false;
         }
 
         app.events(|event| match event {
@@ -117,7 +134,7 @@ fn main() -> ExitCode {
                     });
 
                     webview.update();
-                    needs_repaint = true;
+                    needs_redraw = true;
                 });
             }
             AppEvent::Focused(state) => {
@@ -155,11 +172,11 @@ fn main() -> ExitCode {
                 }
             }
             WebViewEvent::Paint => {
-                needs_repaint = true;
+                needs_redraw = true;
             }
             WebViewEvent::Resized => {
                 webview.update();
-                needs_repaint = true;
+                needs_redraw = true;
             }
             WebViewEvent::Cursor(cursor) => {
                 app.set_cursor(cursor);
@@ -196,29 +213,12 @@ fn main() -> ExitCode {
 
         player.events(|event| match event {
             PlayerEvent::Update => {
-                needs_repaint = true;
+                needs_redraw = true;
             }
             PlayerEvent::PropertyChange(property) => {
                 let message = ipc::create_response(IpcEvent::Mpv(IpcEventMpv::Change(property)));
                 webview.post_message(message);
             }
         });
-
-        if needs_repaint {
-            with_gl(|surface, context| {
-                with_renderer_read(|renderer| {
-                    player.render(renderer.fbo, renderer.width, renderer.height);
-                    renderer.draw();
-                });
-
-                surface
-                    .swap_buffers(context)
-                    .expect("Failed to swap buffers");
-
-                player.report_swap();
-            });
-
-            needs_repaint = false;
-        }
     }
 }
