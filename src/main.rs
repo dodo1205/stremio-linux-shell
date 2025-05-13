@@ -144,6 +144,10 @@ fn main() -> ExitCode {
                 let message = ipc::create_response(IpcEvent::Minimized(minimized));
                 webview.post_message(message);
             }
+            AppEvent::Fullscreen(fullscreen) => {
+                let message = ipc::create_response(IpcEvent::Fullscreen(fullscreen));
+                webview.post_message(message);
+            }
             AppEvent::MouseMoved((position, hovered)) => {
                 webview.mouse_moved(position, hovered);
             }
@@ -195,9 +199,6 @@ fn main() -> ExitCode {
                 }
                 IpcEvent::Fullscreen(state) => {
                     app.set_fullscreen(state);
-
-                    let message = ipc::create_response(IpcEvent::Fullscreen(state));
-                    webview.post_message(message);
                 }
                 IpcEvent::Mpv(event) => match event {
                     IpcEventMpv::Observe(name) => {

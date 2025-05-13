@@ -45,6 +45,7 @@ pub enum AppEvent {
     Resized(WindowSize),
     Focused(bool),
     Minimized(bool),
+    Fullscreen(bool),
     MouseMoved((MousePosition, bool)),
     MouseWheel(MouseDelta),
     MouseInput((ElementState, MouseButton)),
@@ -219,6 +220,12 @@ impl ApplicationHandler for App {
                 if let Some(window) = self.window.as_ref() {
                     let minimized = window.is_minimized().unwrap_or(false);
                     self.sender.send(AppEvent::Minimized(minimized)).ok();
+                }
+            }
+            WindowEvent::RedrawRequested => {
+                if let Some(window) = self.window.as_ref() {
+                    let fullscreen = window.fullscreen().is_some();
+                    self.sender.send(AppEvent::Fullscreen(fullscreen)).ok();
                 }
             }
             WindowEvent::CloseRequested => {
