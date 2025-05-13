@@ -140,6 +140,10 @@ fn main() -> ExitCode {
             AppEvent::Focused(state) => {
                 webview.focused(state);
             }
+            AppEvent::Minimized(minimized) => {
+                let message = ipc::create_response(IpcEvent::Minimized(minimized));
+                webview.post_message(message);
+            }
             AppEvent::MouseMoved((position, hovered)) => {
                 webview.mouse_moved(position, hovered);
             }

@@ -18,6 +18,7 @@ pub enum IpcEventMpv {
 pub enum IpcEvent {
     Init(u64),
     Fullscreen(bool),
+    Minimized(bool),
     OpenMedia(String),
     Mpv(IpcEventMpv),
 }
@@ -157,6 +158,21 @@ impl TryFrom<IpcEvent> for IpcMessageResponse {
                         "visible": true,
                         "visibility": 1,
                         "isFullscreen": state,
+                    }
+                ])),
+            }),
+            IpcEvent::Minimized(state) => Ok(IpcMessageResponse {
+                id: 1,
+                r#type: 1,
+                object: TRANSPORT_NAME.to_owned(),
+                data: None,
+                args: Some(json!([
+                    "win-state-changed",
+                    {
+                        "state": match state {
+                            true => 9,
+                            false => 8,
+                        },
                     }
                 ])),
             }),

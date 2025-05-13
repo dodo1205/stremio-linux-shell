@@ -44,6 +44,7 @@ pub enum AppEvent {
     Ready,
     Resized(WindowSize),
     Focused(bool),
+    Minimized(bool),
     MouseMoved((MousePosition, bool)),
     MouseWheel(MouseDelta),
     MouseInput((ElementState, MouseButton)),
@@ -200,6 +201,12 @@ impl ApplicationHandler for App {
             WindowEvent::MouseInput { state, button, .. } => {
                 self.sender.send(AppEvent::MouseInput((state, button))).ok();
             }
+            WindowEvent::CursorEntered { .. } => {
+                self.hovered = true;
+            }
+            WindowEvent::CursorLeft { .. } => {
+                self.hovered = false;
+            }
             WindowEvent::Touch(touch) => {
                 self.sender.send(AppEvent::TouchInput(touch)).ok();
             }
@@ -208,12 +215,11 @@ impl ApplicationHandler for App {
             }
             WindowEvent::Focused(state) => {
                 self.sender.send(AppEvent::Focused(state)).ok();
-            }
-            WindowEvent::CursorEntered { .. } => {
-                self.hovered = true;
-            }
-            WindowEvent::CursorLeft { .. } => {
-                self.hovered = false;
+
+                if let Some(window) = self.window.as_ref() {
+                    let minimized = window.is_minimized().unwrap_or(false);
+                    self.sender.send(AppEvent::Minimized(minimized)).ok();
+                }
             }
             WindowEvent::CloseRequested => {
                 event_loop.exit();
