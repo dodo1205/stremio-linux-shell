@@ -112,21 +112,26 @@ impl App {
         30
     }
 
-    pub async fn open_url(&self, url: Url) {
-        if let Some(window) = self.window.as_ref() {
-            if let (Ok(window), Ok(display)) = (window.window_handle(), window.display_handle()) {
-                let window_handle = window.as_raw();
-                let display_handle = display.as_raw();
-                let window_identifier =
-                    WindowIdentifier::from_raw_handle(&window_handle, Some(&display_handle)).await;
+    pub async fn open_url<T: Into<String>>(&self, input: T) {
+        if let Ok(url) = Url::parse(&input.into()) {
+            if let Some(window) = self.window.as_ref() {
+                if let (Ok(window), Ok(display)) = (window.window_handle(), window.display_handle())
+                {
+                    let window_handle = window.as_raw();
+                    let display_handle = display.as_raw();
+                    let window_identifier =
+                        WindowIdentifier::from_raw_handle(&window_handle, Some(&display_handle))
+                            .await;
 
-                let request = open_uri::OpenFileRequest::default().identifier(window_identifier);
+                    let request =
+                        open_uri::OpenFileRequest::default().identifier(window_identifier);
 
-                request
-                    .send_uri(&url)
-                    .await
-                    .map_err(|e| error!("Failed to open uri: {e}"))
-                    .ok();
+                    request
+                        .send_uri(&url)
+                        .await
+                        .map_err(|e| error!("Failed to open uri: {e}"))
+                        .ok();
+                }
             }
         }
     }

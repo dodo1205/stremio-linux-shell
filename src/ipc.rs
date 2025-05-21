@@ -20,6 +20,7 @@ pub enum IpcEvent {
     Fullscreen(bool),
     Minimized(bool),
     OpenMedia(String),
+    OpenExternal(String),
     Mpv(IpcEventMpv),
 }
 
@@ -55,6 +56,12 @@ impl TryFrom<IpcMessageRequest> for IpcEvent {
                                     .expect("Invalid win-set-visibility object");
 
                             Ok(IpcEvent::Fullscreen(data.fullscreen))
+                        }
+                        "open-external" => {
+                            let data: String = serde_json::from_value(data)
+                                .expect("Invalid open-external argument");
+
+                            Ok(IpcEvent::OpenExternal(data))
                         }
                         "mpv-command" => {
                             let data: Vec<String> = serde_json::from_value(data)

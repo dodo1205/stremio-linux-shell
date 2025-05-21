@@ -200,6 +200,9 @@ fn main() -> ExitCode {
                 IpcEvent::Fullscreen(state) => {
                     app.set_fullscreen(state);
                 }
+                IpcEvent::OpenExternal(url) => {
+                    futures::executor::block_on(app.open_url(url));
+                }
                 IpcEvent::Mpv(event) => match event {
                     IpcEventMpv::Observe(name) => {
                         player.observe_property(name);
