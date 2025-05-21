@@ -1,5 +1,6 @@
 mod app;
 mod constants;
+mod instance;
 mod ipc;
 mod player;
 mod server;
@@ -13,6 +14,7 @@ use glutin::{
     display::GetGlDisplay,
     surface::{GlSurface, SwapInterval},
 };
+use instance::{Instance, InstanceEvent};
 use ipc::{IpcEvent, IpcEventMpv};
 use player::{Player, PlayerEvent};
 use server::Server;
@@ -57,6 +59,17 @@ fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
 
+    let instance = Instance::new();
+    if instance.running() {
+        if let Some(deeplink) = args.open {
+            instance.send(deeplink);
+        }
+
+        return ExitCode::SUCCESS;
+    }
+
+    instance.start();
+
     let mut server = Server::new(&data_path);
     if !args.no_server {
         server.setup().expect("Failed to setup server");
@@ -82,6 +95,7 @@ fn main() -> ExitCode {
         if let PumpStatus::Exit(exit_code) = status {
             server.stop().expect("Failed to stop server");
             webview.stop();
+            instance.stop();
             drop_renderer();
             drop_gl();
 
@@ -104,6 +118,15 @@ fn main() -> ExitCode {
 
             needs_redraw = false;
         }
+
+        instance.events(|event| match event {
+            InstanceEvent::Open(deeplink) => {
+                if deeplink.starts_with(URI_SCHEME) {
+                    let message = ipc::create_response(IpcEvent::OpenMedia(deeplink.to_string()));
+                    webview.post_message(message);
+                }
+            }
+        });
 
         app.events(|event| match event {
             AppEvent::Ready => {
