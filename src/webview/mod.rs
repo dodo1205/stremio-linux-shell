@@ -25,7 +25,7 @@ use once_cell::sync::OnceCell;
 use url::Url;
 use winit::{
     event::{ElementState, KeyEvent, MouseButton, Touch, TouchPhase},
-    keyboard::{Key, ModifiersState, PhysicalKey},
+    keyboard::{ModifiersState, PhysicalKey},
 };
 
 use crate::shared::types::{Cursor, MouseDelta, MousePosition};
@@ -304,10 +304,10 @@ impl WebView {
             }
 
             if key_event.state.is_pressed() {
-                if let Key::Character(character) = key_event.logical_key {
+                if let Some(text) = key_event.text {
                     let event = cef::KeyEvent {
                         type_: cef_key_event_type_t::KEYEVENT_CHAR.into(),
-                        character: character.as_str().chars().next().map(|c| c as u16).unwrap(),
+                        character: text.as_str().chars().next().map(|c| c as u16).unwrap(),
                         ..Default::default()
                     };
 
