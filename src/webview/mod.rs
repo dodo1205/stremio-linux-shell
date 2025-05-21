@@ -4,6 +4,7 @@ mod cef_impl;
 mod constants;
 
 use std::{
+    fs,
     path::Path,
     sync::mpsc::{Receiver, Sender, channel},
 };
@@ -19,7 +20,7 @@ use cef_dll_sys::{
     cef_event_flags_t, cef_key_event_type_t, cef_log_severity_t, cef_mouse_button_type_t,
     cef_paint_element_type_t, cef_pointer_type_t, cef_touch_event_type_t,
 };
-use constants::IPC_SENDER;
+use constants::{CEF_CACHE_DIR, CEF_DIR, CEF_LOCK_FILE, CEF_LOG_FILE, IPC_SENDER};
 use once_cell::sync::OnceCell;
 use url::Url;
 use winit::{
@@ -61,15 +62,19 @@ impl WebView {
 
         let app = WebViewApp::new();
 
-        let cache_path = data_path.join("cef").join("cache");
-        let log_path = data_path.join("cef").join("log");
+        let cache_path = data_path.join(CEF_DIR).join(CEF_CACHE_DIR);
+        let log_file = data_path.join(CEF_DIR).join(CEF_LOG_FILE);
+
+        // Remove lockfile
+        let lock_file = cache_path.join(CEF_LOCK_FILE);
+        let _ = fs::remove_file(&lock_file);
 
         let settings = Settings {
             no_sandbox: 1,
             windowless_rendering_enabled: 1,
             multi_threaded_message_loop: 1,
             cache_path: cache_path.to_str().unwrap().into(),
-            log_file: log_path.to_str().unwrap().into(),
+            log_file: log_file.to_str().unwrap().into(),
             log_severity: LogSeverity::from(cef_log_severity_t::LOGSEVERITY_VERBOSE),
             ..Default::default()
         };
