@@ -31,10 +31,9 @@ use winit::{
 };
 
 use crate::{
-    constants::{APP_ID, WINDOW_SIZE},
+    constants::{APP_ID, APP_NAME, WINDOW_SIZE},
     shared::{
-        GL_CONTEXT, GL_SURFACE,
-        types::{Cursor, MouseDelta, MousePosition, WindowSize},
+        types::{Cursor, MouseDelta, MousePosition, WindowSize}, GL_CONTEXT, GL_SURFACE
     },
 };
 
@@ -146,7 +145,7 @@ impl Drop for App {
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         let window_attributes = WindowAttributes::default()
-            .with_title("Stremio")
+            .with_title(APP_NAME)
             .with_name(APP_ID, APP_ID)
             .with_decorations(true)
             .with_resizable(true)
