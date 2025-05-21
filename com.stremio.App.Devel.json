@@ -1,5 +1,5 @@
 {
-    "app-id": "com.stremio.App",
+    "app-id": "com.stremio.App.Devel",
     "runtime": "org.freedesktop.Platform",
     "runtime-version": "24.08",
     "sdk": "org.freedesktop.Sdk",
@@ -36,9 +36,7 @@
         "env": {
             "PKG_CONFIG_PATH": "/app/lib/pkgconfig:/app/lib64/pkgconfig",
             "CEF_PATH": "/app/share/stremio"
-        },
-        "strip": true,
-        "no-debuginfo": true
+        }
     },
     "modules": [
         {
@@ -52,14 +50,16 @@
             },
             "build-commands": [
                 "cargo --offline fetch --manifest-path Cargo.toml --verbose",
-                "cargo --offline build --release --verbose -F offline-build"
+                "cargo --offline build --verbose -F offline-build"
             ],
             "post-install": [
                 "install -Dm755 data/stremio -t /app/bin/",
-                "install -Dm755 target/release/stremio-linux-shell /app/share/stremio/stremio",
-                "install -Dm644 data/icons/com.stremio.App.svg -t /app/share/icons/hicolor/scalable/apps/",
-                "install -Dm644 data/com.stremio.App.desktop -t /app/share/applications/",
-                "install -Dm644 data/com.stremio.App.metainfo.xml -t /app/share/metainfo/",
+                "install -Dm755 target/debug/stremio-linux-shell /app/share/stremio/stremio",
+                "install -Dm644 data/icons/com.stremio.App.Devel.svg -t /app/share/icons/hicolor/scalable/apps/",
+                "install -Dm644 data/com.stremio.App.desktop /app/share/applications/com.stremio.App.Devel.desktop",
+                "sed -i -e 's/com.stremio.App/com.stremio.App.Devel/g' /app/share/applications/com.stremio.App.Devel.desktop",
+                "install -Dm644 data/com.stremio.App.metainfo.xml /app/share/metainfo/com.stremio.App.Devel.metainfo.xml",
+                "sed -i -e 's/com.stremio.App/com.stremio.App.Devel/g' /app/share/metainfo/com.stremio.App.Devel.metainfo.xml",
                 "mkdir -p /app/lib/ffmpeg",
                 "mkdir -p /app/lib/intel-vaapi-driver"
             ],
