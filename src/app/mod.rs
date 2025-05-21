@@ -33,7 +33,8 @@ use winit::{
 use crate::{
     constants::{APP_ID, APP_NAME, WINDOW_SIZE},
     shared::{
-        types::{Cursor, MouseDelta, MousePosition, WindowSize}, GL_CONTEXT, GL_SURFACE
+        GL_CONTEXT, GL_SURFACE,
+        types::{Cursor, MouseDelta, MousePosition, WindowSize},
     },
 };
 

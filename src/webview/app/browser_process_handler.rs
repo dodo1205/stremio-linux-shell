@@ -17,8 +17,6 @@ cef_impl!(
 
                 let window_info = WindowInfo {
                     windowless_rendering_enabled: 1,
-                    // external_begin_frame_enabled: 1,
-                    // shared_texture_enabled: 1,
                     ..Default::default()
                 };
 
@@ -26,18 +24,6 @@ cef_impl!(
                     windowless_frame_rate: renderer.refresh_rate as i32,
                     ..Default::default()
                 };
-
-                // assert_eq!(
-                //     browser_host_create_browser(
-                //         Some(&window_info),
-                //         Some(&mut client),
-                //         Some(&url),
-                //         Some(&settings),
-                //         Option::<&mut DictionaryValue>::None,
-                //         Option::<&mut RequestContext>::None,
-                //     ),
-                //     1
-                // )
 
                 BROWSER.get_or_init(|| {
                     browser_host_create_browser_sync(

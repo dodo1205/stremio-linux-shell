@@ -117,12 +117,9 @@ impl WebView {
         let is_browser_process = cmd.has_switch(Some(&switch)) != 1;
 
         if is_browser_process {
-            // println!("launch browser process");
             assert!(ret == -1, "cannot execute browser process");
             false
         } else {
-            // let process_type = CefString::from(&cmd.get_switch_value(Some(&switch)));
-            // println!("launch process {process_type}");
             assert!(ret >= 0, "cannot execute non-browser process");
             true
         }
