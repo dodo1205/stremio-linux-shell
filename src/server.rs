@@ -64,8 +64,9 @@ impl Server {
         Ok(())
     }
 
-    pub fn start(&mut self) -> anyhow::Result<()> {
+    pub fn start(&mut self, dev: bool) -> anyhow::Result<()> {
         let mut child = Command::new("node")
+            .env("NO_CORS", (dev as i32).to_string())
             .arg(self.file_path.as_os_str())
             .stdout(process::Stdio::piped())
             .spawn()

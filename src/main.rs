@@ -73,7 +73,7 @@ fn main() -> ExitCode {
     let mut server = Server::new(&data_path);
     if !args.no_server {
         server.setup().expect("Failed to setup server");
-        server.start().expect("Failed to start server");
+        server.start(args.dev).expect("Failed to start server");
     }
 
     let mut app = App::new();
