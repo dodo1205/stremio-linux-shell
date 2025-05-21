@@ -10,6 +10,27 @@
     </description>
     <developer_name>Stremio</developer_name>
 
+    <screenshots>
+        <screenshot type="default">
+            <image xml:lang="en">
+                https://raw.githubusercontent.com/Stremio/stremio-linux-shell/refs/heads/main/data/screenshots/screenshot1.png
+            </image>
+            <caption>Home page</caption>
+        </screenshot>
+        <screenshot>
+            <image xml:lang="en">
+                https://raw.githubusercontent.com/Stremio/stremio-linux-shell/refs/heads/main/data/screenshots/screenshot2.png
+            </image>
+            <caption>Details page</caption>
+        </screenshot>
+        <screenshot>
+            <image xml:lang="en">
+                https://raw.githubusercontent.com/Stremio/stremio-linux-shell/refs/heads/main/data/screenshots/screenshot3.png
+            </image>
+            <caption>Player page</caption>
+        </screenshot>
+    </screenshots>
+
     <metadata_license>MIT</metadata_license>
     <project_license>GPL-3.0-only</project_license>
     <content_rating type="oars-1.1" />
