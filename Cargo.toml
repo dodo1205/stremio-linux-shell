@@ -14,7 +14,7 @@ anyhow = "1.0.98"
 ashpd = { version = "0.11.0", features = ["async-std", "raw-window-handle", "raw_handle", "wayland"], default-features = false }
 cef = "135.0.22"
 cef-dll-sys = "135.0.22"
-clap = { version = "4.5.37", features = ["derive"] }
+clap = { version = "4.5.38", features = ["derive"] }
 dirs = "6.0.0"
 futures = "0.3.31"
 gl = "0.14.0"
@@ -30,7 +30,7 @@ serde_json = "1.0.140"
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
 url = "2.5.4"
-winit = "0.30.10"
+winit = "0.30.11"
 
 [build-dependencies]
 anyhow = "1.0.98"
@@ -39,6 +39,6 @@ dircpy = "0.3.19"
 globset = "0.4.16"
 serde = "1.0.219"
 tar = "0.4.44"
-toml = "0.8.20"
+toml = "0.8.22"
 ureq = { version = "3.0.11", features = ["json"] }
 
