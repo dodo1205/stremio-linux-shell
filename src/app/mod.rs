@@ -22,7 +22,7 @@ use url::Url;
 use winit::{
     application::ApplicationHandler,
     dpi::PhysicalSize,
-    event::{ElementState, KeyEvent, MouseButton, Touch, WindowEvent},
+    event::{ElementState, KeyEvent, Touch, WindowEvent},
     event_loop::ActiveEventLoop,
     keyboard::ModifiersState,
     platform::wayland::WindowAttributesExtWayland,
@@ -34,7 +34,7 @@ use crate::{
     constants::{APP_ID, APP_NAME, WINDOW_SIZE},
     shared::{
         GL_CONTEXT, GL_SURFACE,
-        types::{Cursor, MouseDelta, MousePosition, WindowSize},
+        types::{Cursor, MouseState, WindowSize},
     },
 };
 
@@ -46,10 +46,9 @@ pub enum AppEvent {
     Focused(bool),
     Minimized(bool),
     Fullscreen(bool),
-    MouseMoved(MousePosition),
-    MouseLeft,
-    MouseWheel(MouseDelta),
-    MouseInput((ElementState, MouseButton)),
+    MouseMoved(MouseState),
+    MouseWheel(MouseState),
+    MouseInput(MouseState),
     TouchInput(Touch),
     KeyboardInput((KeyEvent, ModifiersState)),
 }
@@ -59,6 +58,7 @@ pub struct App {
     sender: Sender<AppEvent>,
     receiver: Receiver<AppEvent>,
     modifiers_state: ModifiersState,
+    mouse_state: MouseState,
 }
 
 impl App {
@@ -70,6 +70,7 @@ impl App {
             sender,
             receiver,
             modifiers_state: ModifiersState::empty(),
+            mouse_state: MouseState::default(),
         }
     }
 
@@ -196,19 +197,33 @@ impl ApplicationHandler for App {
                     .ok();
             }
             WindowEvent::CursorMoved { position, .. } => {
+                self.mouse_state.over = true;
+                self.mouse_state.position = position.into();
                 self.sender
-                    .send(AppEvent::MouseMoved(position.into()))
+                    .send(AppEvent::MouseMoved(self.mouse_state))
+                    .ok();
+            }
+            WindowEvent::CursorLeft { .. } => {
+                self.mouse_state.over = false;
+                self.sender
+                    .send(AppEvent::MouseMoved(self.mouse_state))
                     .ok();
             }
             WindowEvent::MouseWheel { delta, .. } => {
-                self.sender.send(AppEvent::MouseWheel(delta.into())).ok();
-            }
-            WindowEvent::MouseInput { state, button, .. } => {
-                self.sender.send(AppEvent::MouseInput((state, button))).ok();
-            }
-            WindowEvent::CursorLeft { .. } => {
+                self.mouse_state.delta = delta.into();
                 self.sender
-                    .send(AppEvent::MouseLeft)
+                    .send(AppEvent::MouseWheel(self.mouse_state))
+                    .ok();
+            }
+            WindowEvent::MouseInput { button, state, .. } => {
+                self.mouse_state.button = button;
+                self.mouse_state.pressed = match state {
+                    ElementState::Pressed => true,
+                    ElementState::Released => false,
+                };
+
+                self.sender
+                    .send(AppEvent::MouseInput(self.mouse_state))
                     .ok();
             }
             WindowEvent::Touch(touch) => {

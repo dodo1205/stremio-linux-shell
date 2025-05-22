@@ -171,17 +171,14 @@ fn main() -> ExitCode {
                 let message = ipc::create_response(IpcEvent::Fullscreen(fullscreen));
                 webview.post_message(message);
             }
-            AppEvent::MouseMoved(position) => {
-                webview.mouse_moved(position);
+            AppEvent::MouseMoved(state) => {
+                webview.mouse_moved(state);
             }
-            AppEvent::MouseLeft => {
-                webview.mouse_left();
+            AppEvent::MouseWheel(state) => {
+                webview.mouse_wheel(state);
             }
-            AppEvent::MouseWheel(delta) => {
-                webview.mouse_wheel(delta);
-            }
-            AppEvent::MouseInput((state, button)) => {
-                webview.mouse_input(state, button);
+            AppEvent::MouseInput(state) => {
+                webview.mouse_input(state);
             }
             AppEvent::TouchInput(touch) => {
                 webview.touch_input(touch);

@@ -1,14 +1,21 @@
 use cef_dll_sys::cef_cursor_type_t;
-use winit::keyboard::KeyCode;
+use winit::{event::MouseButton, keyboard::KeyCode};
 
-use crate::shared::types::{Cursor, MousePosition};
+use crate::shared::types::{Cursor, MouseState};
 
-impl From<MousePosition> for cef::MouseEvent {
-    fn from(value: MousePosition) -> Self {
+impl From<MouseState> for cef::MouseEvent {
+    fn from(state: MouseState) -> Self {
+        let modifiers = match state.button {
+            MouseButton::Left if state.pressed => 16,
+            MouseButton::Right if state.pressed => 32,
+            MouseButton::Middle if state.pressed => 64,
+            _ => 0,
+        };
+
         Self {
-            x: value.0,
-            y: value.1,
-            modifiers: 0,
+            x: state.position.0,
+            y: state.position.1,
+            modifiers,
         }
     }
 }

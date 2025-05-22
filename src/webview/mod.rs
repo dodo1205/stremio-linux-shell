@@ -24,11 +24,11 @@ use constants::{CEF_CACHE_DIR, CEF_DIR, CEF_LOCK_FILE, CEF_LOG_FILE, IPC_SENDER}
 use once_cell::sync::OnceCell;
 use url::Url;
 use winit::{
-    event::{ElementState, KeyEvent, MouseButton, Touch, TouchPhase},
+    event::{KeyEvent, MouseButton, Touch, TouchPhase},
     keyboard::{ModifiersState, PhysicalKey},
 };
 
-use crate::shared::types::{Cursor, MouseDelta, MousePosition};
+use crate::shared::types::{Cursor, MouseState};
 
 static SENDER: OnceCell<Sender<WebViewEvent>> = OnceCell::new();
 static BROWSER: OnceCell<Browser> = OnceCell::new();
@@ -47,7 +47,6 @@ pub struct WebView {
     args: Args,
     settings: Settings,
     app: App,
-    mouse_position: MousePosition,
     receiver: Receiver<WebViewEvent>,
 }
 
@@ -83,7 +82,6 @@ impl WebView {
             args,
             settings,
             app,
-            mouse_position: Default::default(),
             receiver,
         }
     }
@@ -195,37 +193,26 @@ impl WebView {
         }
     }
 
-    pub fn mouse_moved(&mut self, position: MousePosition) {
-        self.mouse_position = position;
-
+    pub fn mouse_moved(&mut self, state: MouseState) {
         if let Some(host) = self.browser_host() {
-            let event = self.mouse_position.into();
-            host.send_mouse_move_event(Some(&event), false.into());
+            let event = state.into();
+            let mouse_leave = (!state.over).into();
+            host.send_mouse_move_event(Some(&event), mouse_leave);
         }
     }
 
-    pub fn mouse_left(&mut self) {
+    pub fn mouse_wheel(&self, state: MouseState) {
         if let Some(host) = self.browser_host() {
-            let event = self.mouse_position.into();
-            host.send_mouse_move_event(Some(&event), true.into());
+            let event = state.into();
+            host.send_mouse_wheel_event(Some(&event), state.delta.0, state.delta.1);
         }
     }
 
-    pub fn mouse_wheel(&self, MouseDelta(delta_x, delta_y): MouseDelta) {
-        if let Some(host) = self.browser_host() {
-            let event = self.mouse_position.into();
-            host.send_mouse_wheel_event(Some(&event), delta_x, delta_y);
-        }
-    }
-
-    pub fn mouse_input(&self, state: ElementState, button: MouseButton) {
+    pub fn mouse_input(&self, state: MouseState) {
         if let Some(browser) = BROWSER.get() {
-            let mouse_up = match state {
-                ElementState::Pressed => false,
-                ElementState::Released => true,
-            };
+            let mouse_up = !state.pressed;
 
-            let button_type = match button {
+            let button_type = match state.button {
                 MouseButton::Back if mouse_up => {
                     browser.go_back();
                     None
@@ -242,7 +229,7 @@ impl WebView {
 
             if let Some(button_type) = button_type {
                 if let Some(host) = browser.host() {
-                    let event = self.mouse_position.into();
+                    let event = state.into();
 
                     host.send_mouse_click_event(
                         Some(&event),
