@@ -171,8 +171,11 @@ fn main() -> ExitCode {
                 let message = ipc::create_response(IpcEvent::Fullscreen(fullscreen));
                 webview.post_message(message);
             }
-            AppEvent::MouseMoved((position, hovered)) => {
-                webview.mouse_moved(position, hovered);
+            AppEvent::MouseMoved(position) => {
+                webview.mouse_moved(position);
+            }
+            AppEvent::MouseLeft => {
+                webview.mouse_left();
             }
             AppEvent::MouseWheel(delta) => {
                 webview.mouse_wheel(delta);

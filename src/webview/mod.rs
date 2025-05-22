@@ -195,14 +195,19 @@ impl WebView {
         }
     }
 
-    pub fn mouse_moved(&mut self, position: MousePosition, hovered: bool) {
+    pub fn mouse_moved(&mut self, position: MousePosition) {
         self.mouse_position = position;
 
         if let Some(host) = self.browser_host() {
             let event = self.mouse_position.into();
-            let mouse_leave = (!hovered).into();
+            host.send_mouse_move_event(Some(&event), false.into());
+        }
+    }
 
-            host.send_mouse_move_event(Some(&event), mouse_leave);
+    pub fn mouse_left(&mut self) {
+        if let Some(host) = self.browser_host() {
+            let event = self.mouse_position.into();
+            host.send_mouse_move_event(Some(&event), true.into());
         }
     }
 
