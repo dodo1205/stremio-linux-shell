@@ -11,12 +11,10 @@ use std::{
 
 use ashpd::{WindowIdentifier, desktop::open_uri};
 use glutin::{
-    config::ConfigTemplateBuilder,
-    context::{ContextApi, ContextAttributesBuilder, Version},
+    context::{ContextApi, Version},
     display::GetGlDisplay,
     prelude::GlDisplay,
 };
-use glutin_winit::DisplayBuilder;
 use tracing::error;
 use url::Url;
 use winit::{
@@ -153,20 +151,9 @@ impl ApplicationHandler for App {
             .with_min_inner_size(PhysicalSize::new(900, 600))
             .with_inner_size(PhysicalSize::<u32>::from(WINDOW_SIZE));
 
-        let template_builder = ConfigTemplateBuilder::new();
-
-        let (window, config) = DisplayBuilder::new()
-            .with_window_attributes(Some(window_attributes))
-            .build(event_loop, template_builder, utils::config_picker)
-            .expect("Failed to build display");
-
-        let surface = utils::create_window_surface(&config, &window);
-
-        let context_attributes = ContextAttributesBuilder::new()
-            .with_context_api(CONTEXT_API)
-            .build(None);
-
-        let context = utils::create_context(&config, &context_attributes);
+        let (window, config) = utils::create_window(event_loop, window_attributes);
+        let surface = utils::create_surface(&config, &window);
+        let context = utils::create_context(&config, CONTEXT_API);
 
         gl::load_with(|name| {
             let name = CString::new(name).unwrap();
