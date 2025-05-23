@@ -26,6 +26,7 @@
         "--share=ipc",
         "--share=network",
         "--device=dri",
+        "--filesystem=home/.stremio-server:create",
         "--filesystem=xdg-data/stremio:create",
         "--filesystem=xdg-run/stremio:create",
         "--env=LD_LIBRARY_PATH=/app/lib/:/app/lib64/:/app/share/stremio",
@@ -70,7 +71,7 @@
                     "type": "dir",
                     "path": "."
                 },
-                "build-aux/flatpak/cargo-sources.json"
+                "flatpak/cargo-sources.json"
             ],
             "modules": [
                 {
@@ -167,6 +168,6 @@
                 }
             ]
         },
-        "build-aux/flatpak/shared-modules/libappindicator/libappindicator-gtk3-12.10.json"
+        "flatpak/shared-modules/libappindicator/libappindicator-gtk3-12.10.json"
     ]
 }

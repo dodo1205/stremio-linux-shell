@@ -37,8 +37,8 @@ jobs:
           python3 -m pip install toml aiohttp
 
       - name: Build flatpak package
-        run: ./build-aux/flatpak/build.sh
+        run: ./flatpak/build.sh
       - name: Upload flatpak package to release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./build-aux/flatpak/*.flatpak
+          files: ./flatpak/*.flatpak
