@@ -70,7 +70,7 @@
                     "type": "dir",
                     "path": "."
                 },
-                "build-aux/flatpak/cargo-sources.json"
+                "flatpak/cargo-sources.json"
             ],
             "modules": [
                 {

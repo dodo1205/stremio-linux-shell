@@ -40,7 +40,7 @@ python3 -m pip install toml aiohttp
 ```
 
 ```bash
-./build-aux/flatpak/build.sh
+./flatpak/build.sh
 ```
 
 ### How it works
